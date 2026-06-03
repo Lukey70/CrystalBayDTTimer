@@ -126,14 +126,11 @@ This version embeds the audio files directly into `app.js` and uses the Web Audi
 - Fine-tuned the Lane 2 merge-turn car again to sit closer to the centre of the curved lane.
 
 
-## Corrected new store layout
+## Corrected new store layout v2
 
-This version rebuilds the new store map much more closely from the provided image:
-- only one pre-order car space before Order 1 and Order 2
-- two bottom entry lanes
-- Order 1 and Order 2 in the same vertical lanes shown in the reference image
-- Lane 2 diagonal merge into the shared vertical lane
-- connected shared lane up to the top road
-- Cash on the top-right section
-- Present on the top-left section
-- cars centred on the lane positions, including the diagonal merge
+- Lane 1 is the left vertical lane and Lane 2 is the right vertical lane.
+- There is only one pre-order car space before Order 1 and one before Order 2.
+- After Order 1 there is one vertical post-order space before the Lane 2 merge point.
+- After Order 2 there is one diagonal post-order merge space.
+- The shared section has one vertical space after the merge, then one horizontal space before Cash, then Cash, then one space, then Present.
+- The road shape and car coordinates were re-traced to better match the uploaded image.
