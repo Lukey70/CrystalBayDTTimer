@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Drive Thru Timer Map</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <button id="btnExitFullscreen" class="exit-fullscreen" type="button">Exit Fullscreen</button>
+  <main class="app-shell">
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">Drive Thru Timer</p>
+        <h1>Two Lane Map View</h1>
+        <p class="subtext">Two lanes run up the right side and merge smoothly into the shared lane across the top. Cars move one space per second, station timers keep counting until a car physically leaves a section, and the live total time colour matches the longest waiting car.</p>
+      </div>
+      <div class="header-tools">
+        <div class="clock-card">
+          <span>Lunch 11am–2pm</span>
+          <strong id="currentClock">--:--</strong>
+        </div>
+        <div class="sound-card">
+          <strong>Audio</strong>
+          <span id="soundStatus">Sounds ready after first click</span>
+          <div class="sound-buttons">
+            <button id="btnEnableSounds">Enable Sounds</button>
+            <button id="btnTestSounds" class="alt">Test All Sounds</button>
+            <button id="btnFullscreen" class="alt">Fullscreen Mode</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div id="statusBar" class="status-bar">Ready.</div>
+
+    <section class="main-grid">
+      <section class="left-column">
+        <article class="scoreboard">
+          <div class="scoreboard-top">
+            <div>
+              <h2>Car Count</h2>
+              <p>Completed cars only</p>
+            </div>
+            <div class="count-card">
+              <span>Completed Cars</span>
+              <strong id="completedCount">0</strong>
+            </div>
+          </div>
+
+          <div class="score-row">
+            <div class="name">Order-1 <span class="goal" id="goalOrder1">0:30</span></div>
+            <div class="avg" id="avgOrder1">0:00</div>
+            <div class="pct" id="pctOrder1">0%</div>
+          </div>
+          <div class="score-row">
+            <div class="name">Order-2 <span class="goal" id="goalOrder2">0:30</span></div>
+            <div class="avg" id="avgOrder2">0:00</div>
+            <div class="pct" id="pctOrder2">0%</div>
+          </div>
+          <div class="score-row">
+            <div class="name">Cash <span class="goal" id="goalCash">0:30</span></div>
+            <div class="avg" id="avgCash">0:00</div>
+            <div class="pct" id="pctCash">0%</div>
+          </div>
+          <div class="score-row">
+            <div class="name">Present <span class="goal" id="goalPresent">1:00</span></div>
+            <div class="avg" id="avgPresent">0:00</div>
+            <div class="pct" id="pctPresent">0%</div>
+          </div>
+          <div class="score-row total-row">
+            <div class="name">Total <span class="goal" id="goalTotal">1:30</span></div>
+            <div class="avg" id="avgTotal">0:00</div>
+            <div class="pct" id="pctTotal">0%</div>
+          </div>
+        </article>
+
+        <article class="control-card">
+          <h3>Controls</h3>
+          <div class="button-grid">
+            <button id="btnAddLane1">Add Car Lane 1</button>
+            <button id="btnAddLane2">Add Car Lane 2</button>
+            <button id="btnReleaseOrder1" class="warning">Order 1 Complete</button>
+            <button id="btnReleaseOrder2" class="warning">Order 2 Complete</button>
+            <button id="btnReleaseCash" class="info">Cash Complete</button>
+            <button id="btnReleasePresent" class="info">Present Complete</button>
+            <button id="btnReset" class="danger">Reset Day</button>
+          </div>
+          <p class="hint">Keyboard shortcuts: 1 = Add Lane 1, 2 = Add Lane 2, Q = Order 1 complete, W = Order 2 complete, C = Cash complete, P = Present complete, F = Fullscreen.</p>
+        </article>
+
+        <article class="history-card">
+          <div class="history-header">
+            <h3>Completed Cars</h3>
+            <span>Averages update only after the car leaves the drive thru.</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Car</th>
+                  <th>Lane</th>
+                  <th>Order</th>
+                  <th>Cash</th>
+                  <th>Present</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody id="historyBody">
+                <tr><td colspan="6" class="empty">No completed cars yet.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <section class="right-column">
+        <article class="map-panel">
+          <div class="map-frame">
+            <svg class="lane-svg" viewBox="0 0 920 710" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+              <g class="lane-outline">
+                <path d="M 200 112 H 690" />
+                <path d="M 670 620 V 248" />
+                <path d="M 820 620 V 360 L 670 248" />
+              </g>
+              <g class="lane-road">
+                <path d="M 200 112 H 690" />
+                <path d="M 670 620 V 248" />
+                <path d="M 820 620 V 360 L 670 248" />
+              </g>
+            </svg>
+
+            <div class="label present-label">
+              <strong>Present</strong>
+              <span id="labelPresentTime">0:00</span>
+            </div>
+            <div class="label cash-label">
+              <strong>Cash <span id="tickCash" class="ready-tick is-hidden" aria-label="Cash ready to move">✓</span></strong>
+              <span id="labelCashTime">0:00</span>
+            </div>
+            <div class="label order1-label">
+              <strong>Order-1 <span id="tickOrder1" class="ready-tick is-hidden" aria-label="Order 1 ready to move">✓</span></strong>
+              <span id="labelOrder1Time">0:00</span>
+            </div>
+            <div class="label order2-label">
+              <strong>Order-2 <span id="tickOrder2" class="ready-tick is-hidden" aria-label="Order 2 ready to move">✓</span></strong>
+              <span id="labelOrder2Time">0:00</span>
+            </div>
+
+            <div id="carsLayer" class="cars-layer"></div>
+
+            <div class="lane-summary">
+              <span>Cars in Lane</span>
+              <strong id="carsInLane">0</strong>
+              <div class="summary-divider"></div>
+              <span>Total Time</span>
+              <strong id="longestWait" class="status-green">0:00</strong>
+              <em>Longest waiting car</em>
+            </div>
+          </div>
+        </article>
+      </section>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
