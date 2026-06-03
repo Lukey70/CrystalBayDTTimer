@@ -1,26 +1,13 @@
 JavaScript syntax check for simulation.mjs: PASS
 JavaScript syntax check for app.js: PASS
 Simulation logic tests in tests.mjs: PASS
-Original Bloxburg design preserved: PASS
-Lanes widened so cars fit more comfortably: PASS
-Right-side horizontal stub removed: PASS
-Lane 2 connects properly near Order 2: PASS
-Lane 2 merge position moved to the correct forward diagonal space: PASS
-Lane 1 and Lane 2 order positions preserved: PASS
-Order 1 and Order 2 labels moved further right: PASS
-Cash and Present labels moved underneath the drive thru: PASS
-Exactly one pre-order space per lane retained: PASS
-Lane 1 post-order space and shared vertical structure retained: PASS
+Original Bloxburg design retained: PASS
+Lanes widened much more visibly: PASS
+Cars still centred and sized to fit lanes: PASS
+Order 1 label moved further right: PASS
+Order 2 label moved further right: PASS
+Cash label moved underneath: PASS
+Present label moved underneath: PASS
+One pre-order space per lane retained: PASS
 Timing targets retained: PASS
-Embedded car assets retained: PASS
-Embedded sound data retained: PASS
-Ready-to-move ticks retained: PASS
-Fullscreen mode retained: PASS
-
-Requested fixes applied in this version:
-- kept the original Bloxburg visual design
-- widened the lanes so the cars fit better
-- removed the weird extra right-side stub at the top horizontal lane
-- connected Lane 2 cleanly near Order 2
-- moved Order 1 and Order 2 labels further right
-- moved Cash and Present labels underneath the drive thru
+Embedded assets retained: PASS

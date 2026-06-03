@@ -134,3 +134,10 @@ This version embeds the audio files directly into `app.js` and uses the Web Audi
 - Lane 1 has one post-order space before the merge.
 - Lane 2 has one forward diagonal merge space before entering the shared vertical space.
 - The shared section has one vertical space after the merge, then one horizontal space before Cash, then Cash, then one horizontal space before Present.
+
+
+## Immediate layout fixes
+- Lanes have been widened much more visibly using a larger road stroke.
+- Car sprite sizing has been lightly reduced so cars fit comfortably inside the widened lanes.
+- Order 1 and Order 2 labels have been moved further right.
+- Cash and Present labels have been moved clearly underneath the top drive-thru lane.
