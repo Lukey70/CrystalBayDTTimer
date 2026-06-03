@@ -154,3 +154,11 @@ This version embeds the audio files directly into `app.js` and uses the Web Audi
 - Reduced the drive-thru lanes back down to a thickness much closer to the original Bloxburg design.
 - Reduced the car size slightly so cars sit comfortably in the thinner lanes.
 - Repositioned labels so Order 1 and Order 2 stay visible on screen and Cash/Present remain underneath the drive-thru lane.
+
+
+## Immediate visible fix
+- Lanes were reduced to a clearly thinner size: outline 64px, road 48px.
+- Cars were reduced to fit the thinner lanes.
+- Labels were repositioned so they are visibly moved and not cut off.
+- Cash and Present labels are below the top lane.
+- Order 2 label is kept inside the map bounds instead of being cut off on the right.
