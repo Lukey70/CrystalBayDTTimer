@@ -1,19 +1,22 @@
 JavaScript syntax check for simulation.mjs: PASS
 JavaScript syntax check for app.js: PASS
 Simulation logic tests in tests.mjs: PASS
-New store SVG layout applied: PASS
-New store positions applied in app.js: PASS
-Order 1 and Order 2 labels repositioned for new store: PASS
-Cash and Present labels repositioned for new store: PASS
-Live summary panel moved into open left area: PASS
-Fullscreen layout retained: PASS
-Ready-to-move tick indicators retained: PASS
+Only one pre-order space in Lane 1 and Lane 2 logic: PASS
+Corrected road shape uses connected new-store layout: PASS
+Map viewBox matches uploaded image ratio: PASS
+Lane 2 diagonal merge car position is centred on the diagonal lane: PASS
+Top Cash and Present positions match the reference layout: PASS
+Order and one pre-order positions match the reference spacing: PASS
 Embedded car assets retained: PASS
 Embedded sound data retained: PASS
 Web Audio playback retained: PASS
 Timing targets retained: PASS
+Fullscreen mode retained: PASS
+Ready-to-move ticks retained: PASS
 
-Covered latest requested changes:
-- New store map layout now uses the provided two-lane bottom-entry, diagonal Lane 2 merge, top-right Cash, and top-left Present arrangement
-- Existing timer logic, sounds, colours, results board, fullscreen mode, and movement rules are retained
-- Labels and the live summary panel are repositioned to fit the new store map
+Corrected layout notes:
+- rebuilt from the uploaded image dimensions
+- one pre-order space only before Order 1 and Order 2
+- connected grey road shape matching the reference image
+- cars centred at all defined lane positions, including the Lane 2 diagonal merge
+- existing sounds, embedded car images, colour rules, results board and fullscreen mode retained

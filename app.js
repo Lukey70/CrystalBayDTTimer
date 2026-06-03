@@ -13,14 +13,17 @@ const STATUS_THRESHOLDS = {
 };
 
 const POSITION_META = {
-  lane1_pre2: { next: 'lane1_pre1' },
   lane1_pre1: { next: 'order1' },
-  order1: { next: 'gap_cash1', station: 'order1' },
-  lane2_pre2: { next: 'lane2_pre1' },
+  order1: { next: 'gap_shared_low', station: 'order1' },
+
   lane2_pre1: { next: 'order2' },
   order2: { next: 'gap_cash2', station: 'order2' },
-  gap_cash2: { next: 'gap_cash1' },
-  gap_cash1: { next: 'cash' },
+  gap_cash2: { next: 'gap_shared_low' },
+
+  gap_shared_low: { next: 'gap_shared_high' },
+  gap_shared_high: { next: 'gap_cash_entry' },
+  gap_cash_entry: { next: 'cash' },
+
   cash: { next: 'gap_present1', station: 'cash' },
   gap_present1: { next: 'present' },
   present: { next: 'exit', station: 'present' },
@@ -71,7 +74,7 @@ class DriveThruSimulator {
   }
 
   addCar(lane) {
-    const spawn = lane === 1 ? 'lane1_pre2' : 'lane2_pre2';
+    const spawn = lane === 1 ? 'lane1_pre1' : 'lane2_pre1';
     if (this.carAt(spawn)) {
       return { ok: false, reason: `Lane ${lane} spawn is full.` };
     }
@@ -192,24 +195,34 @@ class DriveThruSimulator {
       planMove(cashCar, 'gap_present1');
     }
 
-    const gapCash1Car = this.carAt('gap_cash1');
-    if (gapCash1Car && this.canMoveFrom('gap_cash1') && isEmptyAtStart('cash')) {
-      planMove(gapCash1Car, 'cash');
+    const gapCashEntryCar = this.carAt('gap_cash_entry');
+    if (gapCashEntryCar && this.canMoveFrom('gap_cash_entry') && isEmptyAtStart('cash')) {
+      planMove(gapCashEntryCar, 'cash');
+    }
+
+    const gapSharedHighCar = this.carAt('gap_shared_high');
+    if (gapSharedHighCar && this.canMoveFrom('gap_shared_high') && isEmptyAtStart('gap_cash_entry')) {
+      planMove(gapSharedHighCar, 'gap_cash_entry');
+    }
+
+    const gapSharedLowCar = this.carAt('gap_shared_low');
+    if (gapSharedLowCar && this.canMoveFrom('gap_shared_low') && isEmptyAtStart('gap_shared_high')) {
+      planMove(gapSharedLowCar, 'gap_shared_high');
     }
 
     const contenders = [];
-    const gapCash2Car = this.carAt('gap_cash2');
-    if (gapCash2Car && this.canMoveFrom('gap_cash2')) contenders.push(gapCash2Car);
+    const lane2MergeCar = this.carAt('gap_cash2');
+    if (lane2MergeCar && this.canMoveFrom('gap_cash2')) contenders.push(lane2MergeCar);
     const order1Car = this.carAt('order1');
     if (order1Car && this.canMoveFrom('order1')) contenders.push(order1Car);
-    if (contenders.length && isEmptyAtStart('gap_cash1')) {
+    if (contenders.length && isEmptyAtStart('gap_shared_low')) {
       contenders.sort((a, b) => {
         const aPriority = a.orderReleaseAt ?? this.now;
         const bPriority = b.orderReleaseAt ?? this.now;
         if (aPriority !== bPriority) return aPriority - bPriority;
         return a.id - b.id;
       });
-      planMove(contenders[0], 'gap_cash1');
+      planMove(contenders[0], 'gap_shared_low');
     }
 
     const order2Car = this.carAt('order2');
@@ -217,22 +230,14 @@ class DriveThruSimulator {
       planMove(order2Car, 'gap_cash2');
     }
 
-    const lane1Pre1 = this.carAt('lane1_pre1');
-    if (lane1Pre1 && this.canMoveFrom('lane1_pre1') && isEmptyAtStart('order1')) {
-      planMove(lane1Pre1, 'order1');
-    }
-    const lane1Pre2 = this.carAt('lane1_pre2');
-    if (lane1Pre2 && this.canMoveFrom('lane1_pre2') && isEmptyAtStart('lane1_pre1')) {
-      planMove(lane1Pre2, 'lane1_pre1');
+    const lane1Pre = this.carAt('lane1_pre1');
+    if (lane1Pre && this.canMoveFrom('lane1_pre1') && isEmptyAtStart('order1')) {
+      planMove(lane1Pre, 'order1');
     }
 
-    const lane2Pre1 = this.carAt('lane2_pre1');
-    if (lane2Pre1 && this.canMoveFrom('lane2_pre1') && isEmptyAtStart('order2')) {
-      planMove(lane2Pre1, 'order2');
-    }
-    const lane2Pre2 = this.carAt('lane2_pre2');
-    if (lane2Pre2 && this.canMoveFrom('lane2_pre2') && isEmptyAtStart('lane2_pre1')) {
-      planMove(lane2Pre2, 'lane2_pre1');
+    const lane2Pre = this.carAt('lane2_pre1');
+    if (lane2Pre && this.canMoveFrom('lane2_pre1') && isEmptyAtStart('order2')) {
+      planMove(lane2Pre, 'order2');
     }
 
     if (!plannedMoves.length) return;
@@ -307,20 +312,23 @@ const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 
 
-const MAP_SIZE = { width: 920, height: 710 };
-
+const MAP_SIZE = { width: 1062, height: 823 };
 const POSITION_UI = {
-  present: { x: 280, y: 112, rotation: 180 },
-  gap_present1: { x: 420, y: 112, rotation: 180 },
-  cash: { x: 560, y: 112, rotation: 180 },
-  gap_cash1: { x: 670, y: 245, rotation: -90 },
-  gap_cash2: { x: 778, y: 278, rotation: -128 },
-  order1: { x: 670, y: 378, rotation: -90 },
-  order2: { x: 820, y: 378, rotation: -90 },
-  lane1_pre1: { x: 670, y: 498, rotation: -90 },
-  lane1_pre2: { x: 670, y: 618, rotation: -90 },
-  lane2_pre1: { x: 820, y: 498, rotation: -90 },
-  lane2_pre2: { x: 820, y: 618, rotation: -90 },
+  present: { x: 275, y: 132, rotation: 180 },
+  gap_present1: { x: 426, y: 132, rotation: 180 },
+  cash: { x: 574, y: 132, rotation: 180 },
+  gap_cash_entry: { x: 728, y: 132, rotation: 180 },
+
+  gap_shared_high: { x: 778, y: 274, rotation: -90 },
+  gap_shared_low: { x: 778, y: 414, rotation: -90 },
+
+  gap_cash2: { x: 888, y: 396, rotation: -135 },
+
+  order1: { x: 778, y: 592, rotation: -90 },
+  lane1_pre1: { x: 778, y: 748, rotation: -90 },
+
+  order2: { x: 968, y: 592, rotation: -90 },
+  lane2_pre1: { x: 968, y: 748, rotation: -90 },
 };
 
 const simulator = new DriveThruSimulator(loadState());

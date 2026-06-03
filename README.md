@@ -126,10 +126,14 @@ This version embeds the audio files directly into `app.js` and uses the Web Audi
 - Fine-tuned the Lane 2 merge-turn car again to sit closer to the centre of the curved lane.
 
 
-## New store layout
+## Corrected new store layout
 
-- Replaced the old Bloxburg-style drive-thru map with the new store layout provided by the user.
-- Two entry lanes now run upward from the bottom, with Order 1 on the left lane and Order 2 on the right lane.
-- Lane 2 merges diagonally into the shared lane like the provided reference image.
-- Cash is on the top right of the horizontal lane and Present is on the top left.
-- Spacing on the map has been recalibrated to match the provided store layout while keeping the existing timer logic, sounds, colours, results board, and fullscreen mode.
+This version rebuilds the new store map much more closely from the provided image:
+- only one pre-order car space before Order 1 and Order 2
+- two bottom entry lanes
+- Order 1 and Order 2 in the same vertical lanes shown in the reference image
+- Lane 2 diagonal merge into the shared vertical lane
+- connected shared lane up to the top road
+- Cash on the top-right section
+- Present on the top-left section
+- cars centred on the lane positions, including the diagonal merge

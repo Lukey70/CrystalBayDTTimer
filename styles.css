@@ -2,8 +2,8 @@
   --bg: #091736;
   --panel: #182a62;
   --panel-dark: #13224f;
-  --lane: #1590c8;
-  --lane-outline: #0d2a59;
+  --lane: #666666;
+  --lane-outline: #333333;
   --text: #f7fbff;
   --muted: #b4c2df;
   --green: #58df42;
@@ -96,20 +96,19 @@ th { color: var(--muted); font-weight: 700; }
 .empty { text-align: center; color: var(--muted); }
 .map-panel { border-radius: 24px; padding: 14px; display: flex; align-items: center; justify-content: center; }
 .map-frame {
-  position: relative; width: 100%; max-width: 1030px; aspect-ratio: 920 / 710; min-height: 0;
-  border-radius: 24px; overflow: hidden; background: #163c7a;
+  position: relative; width: 100%; max-width: 1120px; aspect-ratio: 1062 / 823; min-height: 0;
+  border-radius: 24px; overflow: hidden; background: #00ff00;
 }
 .lane-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
-.lane-svg path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
-.lane-outline path { stroke: var(--lane-outline); stroke-width: 82; }
-.lane-road path { stroke: var(--lane); stroke-width: 66; }
+.lane-svg path { stroke-linecap: round; stroke-linejoin: round; }
+.lane-road path { fill: var(--lane); stroke: var(--lane-outline); stroke-width: 4; }
 .label { position: absolute; z-index: 2; text-shadow: 0 2px 0 rgba(0,0,0,0.38); pointer-events: none; }
 .label strong { display: inline-flex; align-items: center; gap: 6px; font-size: 1.1rem; }
 .label span { display: block; color: var(--orange); font-size: 0.95rem; font-weight: 900; }
-.present-label { left: 30.5%; top: 18.5%; transform: translate(-50%, 0); text-align: center; }
-.cash-label { left: 57.8%; top: 18.5%; transform: translate(-50%, 0); text-align: center; }
-.order1-label { left: 67.8%; top: 53.2%; transform: translate(-100%, -50%); text-align: right; }
-.order2-label { left: 86.8%; top: 53.0%; transform: translate(0, -50%); text-align: left; }
+.present-label { left: 25.9%; top: 5.2%; transform: translate(-50%, 0); text-align: center; }
+.cash-label { left: 54.1%; top: 5.2%; transform: translate(-50%, 0); text-align: center; }
+.order1-label { left: 66.8%; top: 71.8%; transform: translate(-100%, -50%); text-align: right; }
+.order2-label { left: 85.1%; top: 71.8%; transform: translate(-100%, -50%); text-align: right; }
 .cars-layer { position: absolute; inset: 0; z-index: 3; }
 .car {
   position: absolute; width: 10.6%; max-width: 96px; min-width: 68px; aspect-ratio: 102 / 44;
@@ -129,17 +128,17 @@ th { color: var(--muted); font-weight: 700; }
 }
 .ready-tick.is-hidden { visibility: hidden; }
 .lane-summary {
-  position: absolute; left: 7%; bottom: 12%; width: 31%; min-width: 230px; border-radius: 18px;
-  border: 2px solid rgba(255,255,255,0.4); background: rgba(15,25,59,0.76); padding: 16px; z-index: 2;
+  position: absolute; left: 10%; bottom: 14%; width: 44%; min-width: 300px; border-radius: 18px;
+  border: 2px solid rgba(255,255,255,0.55); background: rgba(225, 255, 232, 0.9); padding: 18px; z-index: 2;
 }
-.lane-summary span { display: block; color: var(--muted); font-style: italic; font-size: 1.08rem; }
+.lane-summary span { display: block; color: #06152c; font-style: italic; font-size: 1.08rem; }
 .lane-summary strong { display: block; margin-top: 6px; font-size: clamp(2.2rem, 4vw, 3.5rem); line-height: 1; }
-#carsInLane { color: white; }
+#carsInLane { color: #06152c; }
 #longestWait.status-green { color: var(--green); }
 #longestWait.status-yellow { color: var(--yellow); }
 #longestWait.status-red { color: var(--red); }
 .summary-divider { height: 1px; background: rgba(255,255,255,0.16); margin: 12px 0; }
-.lane-summary em { display: block; margin-top: 4px; color: var(--muted); }
+.lane-summary em { display: block; margin-top: 4px; color: #06152c; }
 .exit-fullscreen {
   display: none; position: fixed; top: 12px; right: 12px; z-index: 9999; background: rgba(7,20,45,0.86); color: white;
   border: 2px solid rgba(255,255,255,0.2);
@@ -163,11 +162,11 @@ body.fullscreen-mode .map-panel { min-height: 0; }
 body.fullscreen-mode .scoreboard { height: 100%; padding: 18px 22px; overflow: auto; }
 body.fullscreen-mode .map-panel { height: 100%; padding: 8px; }
 body.fullscreen-mode .map-frame { width: 100%; height: auto; max-width: none; }
-body.fullscreen-mode .present-label { top: 18.5%; }
-body.fullscreen-mode .cash-label { top: 18.5%; }
-body.fullscreen-mode .order1-label { top: 53.2%; }
-body.fullscreen-mode .order2-label { top: 53.0%; }
-body.fullscreen-mode .lane-summary { left: 7%; right: auto; bottom: 12%; }
+body.fullscreen-mode .present-label { top: 5.2%; }
+body.fullscreen-mode .cash-label { top: 5.2%; }
+body.fullscreen-mode .order1-label { top: 71.8%; }
+body.fullscreen-mode .order2-label { top: 71.8%; }
+body.fullscreen-mode .lane-summary { left: 10%; right: auto; bottom: 14%; }
 body.fullscreen-mode .exit-fullscreen { display: inline-flex; align-items: center; }
 @media (max-width: 1200px) { .main-grid { grid-template-columns: 1fr; } }
 @media (max-width: 780px) {
