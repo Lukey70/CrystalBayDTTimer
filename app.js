@@ -257,7 +257,7 @@ const POSITION_UI = {
   gap_cash_entry: { x: 717, y: 125, rotation: 180 },
   shared_vertical: { x: 776, y: 271, rotation: -90 },
   lane1_post: { x: 776, y: 417, rotation: -90 },
-  lane2_merge: { x: 848, y: 346, rotation: -132 },
+  lane2_merge: { x: 895, y: 412, rotation: -130 },
   order1: { x: 776, y: 576, rotation: -90 },
   lane1_pre1: { x: 776, y: 735, rotation: -90 },
   order2: { x: 968, y: 576, rotation: -90 },

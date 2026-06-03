@@ -101,16 +101,16 @@ th { color: var(--muted); font-weight: 700; }
 }
 .lane-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
 .lane-svg path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
-.lane-outline path { stroke: var(--lane-outline); stroke-width: 78; }
-.lane-road path { stroke: var(--lane); stroke-width: 62; }
+.lane-outline path { stroke: var(--lane-outline); stroke-width: 94; }
+.lane-road path { stroke: var(--lane); stroke-width: 78; }
 .label { position: absolute; z-index: 2; text-shadow: 0 2px 0 rgba(0,0,0,0.38); pointer-events: none; }
 .label strong { display: inline-flex; align-items: center; gap: 6px; font-size: 1.1rem; }
 .label span { display: block; color: var(--orange); font-size: 0.95rem; font-weight: 900; }
 
-.present-label { left: 24.0%; top: 1.1%; transform: translate(-50%, 0); text-align: center; }
-.cash-label { left: 51.8%; top: 1.1%; transform: translate(-50%, 0); text-align: center; }
-.order1-label { left: 66.0%; top: 66.4%; transform: translate(-100%, -50%); text-align: right; }
-.order2-label { left: 84.1%; top: 66.4%; transform: translate(-100%, -50%); text-align: right; }
+.present-label { left: 24.0%; top: 18.8%; transform: translate(-50%, 0); text-align: center; }
+.cash-label { left: 51.8%; top: 18.8%; transform: translate(-50%, 0); text-align: center; }
+.order1-label { left: 68.7%; top: 66.4%; transform: translate(-100%, -50%); text-align: right; }
+.order2-label { left: 86.8%; top: 66.4%; transform: translate(0, -50%); text-align: left; }
 .cars-layer { position: absolute; inset: 0; z-index: 3; }
 .car {
   position: absolute; width: 10.6%; max-width: 96px; min-width: 68px; aspect-ratio: 102 / 44;
@@ -164,8 +164,8 @@ body.fullscreen-mode .map-panel { min-height: 0; }
 body.fullscreen-mode .scoreboard { height: 100%; padding: 18px 22px; overflow: auto; }
 body.fullscreen-mode .map-panel { height: 100%; padding: 8px; }
 body.fullscreen-mode .map-frame { width: 100%; height: auto; max-width: none; }
-body.fullscreen-mode .present-label { top: 1.1%; }
-body.fullscreen-mode .cash-label { top: 1.1%; }
+body.fullscreen-mode .present-label { top: 18.8%; }
+body.fullscreen-mode .cash-label { top: 18.8%; }
 body.fullscreen-mode .order1-label { top: 66.4%; }
 body.fullscreen-mode .order2-label { top: 66.4%; }
 body.fullscreen-mode .lane-summary { left: 2.8%; right: auto; bottom: 5%; }
