@@ -141,3 +141,9 @@ This version embeds the audio files directly into `app.js` and uses the Web Audi
 - Car sprite sizing has been lightly reduced so cars fit comfortably inside the widened lanes.
 - Order 1 and Order 2 labels have been moved further right.
 - Cash and Present labels have been moved clearly underneath the top drive-thru lane.
+
+
+## Lane width adjustment
+- Reduced the lane width from the previous version because it was too wide.
+- New lane width is a middle point: wider than the earlier too-narrow version, but narrower than the last version.
+- Label positions, car assets, sounds, movement logic and fullscreen mode were retained.

@@ -101,8 +101,8 @@ th { color: var(--muted); font-weight: 700; }
 }
 .lane-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
 .lane-svg path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
-.lane-outline path { stroke: var(--lane-outline); stroke-width: 132; }
-.lane-road path { stroke: var(--lane); stroke-width: 108; }
+.lane-outline path { stroke: var(--lane-outline); stroke-width: 112; }
+.lane-road path { stroke: var(--lane); stroke-width: 88; }
 .label { position: absolute; z-index: 2; text-shadow: 0 2px 0 rgba(0,0,0,0.38); pointer-events: none; }
 .label strong { display: inline-flex; align-items: center; gap: 6px; font-size: 1.1rem; }
 .label span { display: block; color: var(--orange); font-size: 0.95rem; font-weight: 900; }

@@ -2,12 +2,12 @@ JavaScript syntax check for simulation.mjs: PASS
 JavaScript syntax check for app.js: PASS
 Simulation logic tests in tests.mjs: PASS
 Original Bloxburg design retained: PASS
-Lanes widened much more visibly: PASS
-Cars still centred and sized to fit lanes: PASS
-Order 1 label moved further right: PASS
-Order 2 label moved further right: PASS
-Cash label moved underneath: PASS
-Present label moved underneath: PASS
+Lane width reduced from last version: PASS
+Car size retained for comfortable fit: PASS
+Order 1 label remains further right: PASS
+Order 2 label remains further right: PASS
+Cash label remains underneath: PASS
+Present label remains underneath: PASS
 One pre-order space per lane retained: PASS
 Timing targets retained: PASS
 Embedded assets retained: PASS
