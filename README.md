@@ -147,3 +147,10 @@ This version embeds the audio files directly into `app.js` and uses the Web Audi
 - Reduced the lane width from the previous version because it was too wide.
 - New lane width is a middle point: wider than the earlier too-narrow version, but narrower than the last version.
 - Label positions, car assets, sounds, movement logic and fullscreen mode were retained.
+
+
+## Immediate thin-lane fix
+
+- Reduced the drive-thru lanes back down to a thickness much closer to the original Bloxburg design.
+- Reduced the car size slightly so cars sit comfortably in the thinner lanes.
+- Repositioned labels so Order 1 and Order 2 stay visible on screen and Cash/Present remain underneath the drive-thru lane.
