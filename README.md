@@ -126,11 +126,11 @@ This version embeds the audio files directly into `app.js` and uses the Web Audi
 - Fine-tuned the Lane 2 merge-turn car again to sit closer to the centre of the curved lane.
 
 
-## Corrected new store layout v2
+## New store layout on original Bloxburg design
 
+- Keeps the original blue Bloxburg visual design, controls, results board, sounds, and car assets.
 - Lane 1 is the left vertical lane and Lane 2 is the right vertical lane.
-- There is only one pre-order car space before Order 1 and one before Order 2.
-- After Order 1 there is one vertical post-order space before the Lane 2 merge point.
-- After Order 2 there is one diagonal post-order merge space.
-- The shared section has one vertical space after the merge, then one horizontal space before Cash, then Cash, then one space, then Present.
-- The road shape and car coordinates were re-traced to better match the uploaded image.
+- Each lane has one pre-order space.
+- Lane 1 has one post-order space before the merge.
+- Lane 2 has one forward diagonal merge space before entering the shared vertical space.
+- The shared section has one vertical space after the merge, then one horizontal space before Cash, then Cash, then one horizontal space before Present.

@@ -1,20 +1,22 @@
 JavaScript syntax check for simulation.mjs: PASS
 JavaScript syntax check for app.js: PASS
 Simulation logic tests in tests.mjs: PASS
-One pre-order space only before each order: PASS
+Original Bloxburg blue design preserved: PASS
 Lane 1 remains left vertical lane and Lane 2 remains right vertical lane: PASS
-Lane 2 diagonal merge space is present: PASS
-Shared section logic follows vertical-after-merge then horizontal pre-cash, cash, gap, present: PASS
-Connected road shape for new store is present: PASS
-Map uses uploaded-image ratio: PASS
+Exactly one pre-order space per lane: PASS
+Lane 1 post-order space before merge exists: PASS
+Lane 2 forward diagonal merge space exists: PASS
+Shared section matches requested structure: PASS
+New store SVG layout uses original design styling with corrected path geometry: PASS
+Map ratio updated for reference image: PASS
 Timing targets retained: PASS
 Embedded car assets retained: PASS
 Embedded sound data retained: PASS
 Ready-to-move ticks retained: PASS
 Fullscreen mode retained: PASS
 
-Layout notes:
-- Lane 1 is the left lane and Lane 2 is the right lane
-- 1 pre-order space before each order
-- Lane 1 order then shared-low; Lane 2 order then diagonal merge space
-- Shared section = 1 vertical space after merge, then horizontal pre-cash, cash, 1 gap, present
+Key corrections in this version:
+- restored the original Bloxburg blue design/style
+- Lane 1 left / Lane 2 right preserved
+- Lane 2 merge moved forward so it feeds into the shared vertical space after the merge
+- shared section now follows: shared vertical -> pre-cash -> cash -> gap -> present

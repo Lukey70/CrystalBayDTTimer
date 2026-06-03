@@ -2,8 +2,8 @@
   --bg: #091736;
   --panel: #182a62;
   --panel-dark: #13224f;
-  --lane: #6e6e6e;
-  --lane-outline: #4f4f4f;
+  --lane: #1590c8;
+  --lane-outline: #0d2a59;
   --text: #f7fbff;
   --muted: #b4c2df;
   --green: #58df42;
@@ -18,7 +18,7 @@ body {
   min-height: 100vh;
   font-family: Arial, Helvetica, sans-serif;
   color: var(--text);
-  background: radial-gradient(circle at top left, rgba(255,255,255,0.08), transparent 34rem), #0aa80d;
+  background: radial-gradient(circle at top left, rgba(47, 120, 201, 0.3), transparent 34rem), #07142d;
 }
 button {
   appearance: none;
@@ -96,20 +96,21 @@ th { color: var(--muted); font-weight: 700; }
 .empty { text-align: center; color: var(--muted); }
 .map-panel { border-radius: 24px; padding: 14px; display: flex; align-items: center; justify-content: center; }
 .map-frame {
-  position: relative; width: 100%; max-width: 1000px; aspect-ratio: 1062 / 823; min-height: 0;
+  position: relative; width: 100%; max-width: 1062px; aspect-ratio: 1062 / 823; min-height: 0;
   border-radius: 24px; overflow: hidden; background: #163c7a;
 }
 .lane-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
-.lane-svg path { stroke-linecap: round; stroke-linejoin: round; }
-.lane-road path { fill: var(--lane); stroke: var(--lane-outline); stroke-width: 4; }
+.lane-svg path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.lane-outline path { stroke: var(--lane-outline); stroke-width: 78; }
+.lane-road path { stroke: var(--lane); stroke-width: 62; }
 .label { position: absolute; z-index: 2; text-shadow: 0 2px 0 rgba(0,0,0,0.38); pointer-events: none; }
 .label strong { display: inline-flex; align-items: center; gap: 6px; font-size: 1.1rem; }
 .label span { display: block; color: var(--orange); font-size: 0.95rem; font-weight: 900; }
 
-.present-label { left: 24.0%; top: 0.8%; transform: translate(-50%, 0); text-align: center; }
-.cash-label { left: 52.2%; top: 0.8%; transform: translate(-50%, 0); text-align: center; }
-.order1-label { left: 66.5%; top: 66.5%; transform: translate(-100%, -50%); text-align: right; }
-.order2-label { left: 84.0%; top: 66.5%; transform: translate(-100%, -50%); text-align: right; }
+.present-label { left: 24.0%; top: 1.1%; transform: translate(-50%, 0); text-align: center; }
+.cash-label { left: 51.8%; top: 1.1%; transform: translate(-50%, 0); text-align: center; }
+.order1-label { left: 66.0%; top: 66.4%; transform: translate(-100%, -50%); text-align: right; }
+.order2-label { left: 84.1%; top: 66.4%; transform: translate(-100%, -50%); text-align: right; }
 .cars-layer { position: absolute; inset: 0; z-index: 3; }
 .car {
   position: absolute; width: 10.6%; max-width: 96px; min-width: 68px; aspect-ratio: 102 / 44;
@@ -128,19 +129,18 @@ th { color: var(--muted); font-weight: 700; }
   font-size: 0.9rem; font-weight: 900; line-height: 1;
 }
 .ready-tick.is-hidden { visibility: hidden; }
-
 .lane-summary {
-  position: absolute; left: 10%; bottom: 13%; width: 38%; min-width: 260px; border-radius: 18px;
-  border: 2px solid rgba(0,0,0,0.25); background: rgba(232, 245, 230, 0.92); padding: 16px; z-index: 2;
+  position: absolute; left: 2.8%; bottom: 5%; width: 24%; min-width: 210px; border-radius: 18px;
+  border: 2px solid rgba(255,255,255,0.4); background: rgba(15,25,59,0.76); padding: 16px; z-index: 2;
 }
-.lane-summary span { display: block; color: #0b0b0b; font-style: italic; font-size: 1.08rem; }
+.lane-summary span { display: block; color: var(--muted); font-style: italic; font-size: 1.08rem; }
 .lane-summary strong { display: block; margin-top: 6px; font-size: clamp(2.2rem, 4vw, 3.5rem); line-height: 1; }
-#carsInLane { color: #0b0b0b; }
+#carsInLane { color: white; }
 #longestWait.status-green { color: var(--green); }
 #longestWait.status-yellow { color: var(--yellow); }
 #longestWait.status-red { color: var(--red); }
 .summary-divider { height: 1px; background: rgba(255,255,255,0.16); margin: 12px 0; }
-.lane-summary em { display: block; margin-top: 4px; color: #0b0b0b; }
+.lane-summary em { display: block; margin-top: 4px; color: var(--muted); }
 .exit-fullscreen {
   display: none; position: fixed; top: 12px; right: 12px; z-index: 9999; background: rgba(7,20,45,0.86); color: white;
   border: 2px solid rgba(255,255,255,0.2);
@@ -164,11 +164,11 @@ body.fullscreen-mode .map-panel { min-height: 0; }
 body.fullscreen-mode .scoreboard { height: 100%; padding: 18px 22px; overflow: auto; }
 body.fullscreen-mode .map-panel { height: 100%; padding: 8px; }
 body.fullscreen-mode .map-frame { width: 100%; height: auto; max-width: none; }
-body.fullscreen-mode .present-label { top: 0.8%; }
-body.fullscreen-mode .cash-label { top: 0.8%; }
-body.fullscreen-mode .order1-label { top: 66.5%; }
-body.fullscreen-mode .order2-label { top: 66.5%; }
-body.fullscreen-mode .lane-summary { left: 10%; right: auto; bottom: 13%; }
+body.fullscreen-mode .present-label { top: 1.1%; }
+body.fullscreen-mode .cash-label { top: 1.1%; }
+body.fullscreen-mode .order1-label { top: 66.4%; }
+body.fullscreen-mode .order2-label { top: 66.4%; }
+body.fullscreen-mode .lane-summary { left: 2.8%; right: auto; bottom: 5%; }
 body.fullscreen-mode .exit-fullscreen { display: inline-flex; align-items: center; }
 @media (max-width: 1200px) { .main-grid { grid-template-columns: 1fr; } }
 @media (max-width: 780px) {
