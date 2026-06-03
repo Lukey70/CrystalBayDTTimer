@@ -162,3 +162,11 @@ This version embeds the audio files directly into `app.js` and uses the Web Audi
 - Labels were repositioned so they are visibly moved and not cut off.
 - Cash and Present labels are below the top lane.
 - Order 2 label is kept inside the map bounds instead of being cut off on the right.
+
+
+## Lane width restored closer to Bloxburg
+
+- Increased the lane width back up so it is closer to the original Bloxburg map lane thickness.
+- Lane outline is 78px and lane road is 62px.
+- Cars were increased slightly to suit the restored lane size.
+- Existing label positions and layout logic were retained.
