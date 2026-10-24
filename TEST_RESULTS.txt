@@ -22,3 +22,6 @@ completed count and service average unchanged; next car can use Window 3.
 
 LIVE SITE: Expanded display fallback verified. Final label clearance adjusted
 so Order 2 sits between the two ordering lanes, clear of the Order 1 car.
+
+FINAL LIVE DISPLAY: Order 2 label bounds clear both ordering cars. Expanded
+view and Exit Fullscreen work. Final screenshot saved in this repository.

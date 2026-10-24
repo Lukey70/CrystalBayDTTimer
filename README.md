@@ -54,3 +54,7 @@ node tests.mjs
 ```
 
 The test suite covers both entry lanes, queue movement, merge priority, blocked stations, completion statistics, normal thresholds, Window 3 colour boundaries, result isolation, occupied-window handling, normal exits while Window 3 is occupied, reloads, resets, and parity between the browser and tested simulation engine.
+
+## Preview
+
+![Crystal Bay timer with Window 3](crystal-bay-preview-20261024.jpg)
