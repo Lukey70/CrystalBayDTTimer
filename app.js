@@ -1,4 +1,3 @@
-/* Standalone browser build: simulator + app. */
 const TARGETS = {
   order1: 30,
   order2: 30,
@@ -11,6 +10,15 @@ const STATUS_THRESHOLDS = {
   yellow: 90,
   red: 120,
 };
+
+// Window 3 is a separate, visual-only clock measured from arrival.
+const WAITING_THRESHOLDS = { yellow: 90, red: 120 };
+
+function waitingStatus(seconds) {
+  if (seconds >= WAITING_THRESHOLDS.red) return 'red';
+  if (seconds >= WAITING_THRESHOLDS.yellow) return 'yellow';
+  return 'green';
+}
 
 const POSITION_META = {
   lane1_pre1: { next: 'order1' },
@@ -26,9 +34,10 @@ const POSITION_META = {
   cash: { next: 'gap_present1', station: 'cash' },
   gap_present1: { next: 'present' },
   present: { next: 'exit', station: 'present' },
+  window3: { next: 'exit', station: 'window3' },
 };
 
-const STATIONS = new Set(['order1', 'order2', 'cash', 'present']);
+const STATIONS = new Set(['order1', 'order2', 'cash', 'present', 'window3']);
 
 class DriveThruSimulator {
   constructor(savedState = null) {
@@ -93,10 +102,21 @@ class DriveThruSimulator {
     return { ok: true, car };
   }
 
+  sendToWindow3() {
+    const car = this.carAt('present');
+    if (!car) return { ok: false, reason: 'No car at Present.' };
+    if (this.carAt('window3')) return { ok: false, reason: 'Window 3 is occupied. Complete that car first.' };
+    if (car.releaseRequested) return { ok: false, reason: `Car #${car.id} is already leaving Present.` };
+    car.destination = 'window3';
+    car.releaseRequested = true;
+    this.statusMessage = `Car #${car.id} will move from Present to Window 3.`;
+    return { ok: true, car };
+  }
+
   stationElapsed(car) { return this.now - car.positionEnteredAt; }
-  totalElapsed(car) { return car.totalStartedAt == null ? 0 : this.now - car.totalStartedAt; }
-  getCarsInLaneCount() { return this.activeCars.length; }
-  getLongestCurrentTotal() { let longest = 0; for (const car of this.activeCars) longest = Math.max(longest, this.totalElapsed(car)); return longest; }
+  totalElapsed(car) { return car.completedAt != null ? car.timings.total : car.totalStartedAt == null ? 0 : this.now - car.totalStartedAt; }
+  getCarsInLaneCount() { return this.activeCars.filter((car) => car.position !== 'window3').length; }
+  getLongestCurrentTotal() { let longest = 0; for (const car of this.activeCars) if (car.position !== 'window3') longest = Math.max(longest, this.totalElapsed(car)); return longest; }
 
   tick(seconds = 1) {
     const allEvents = [];
@@ -112,6 +132,7 @@ class DriveThruSimulator {
 
   processThresholds(events) {
     for (const car of this.activeCars) {
+      if (car.position === 'window3') continue;
       const total = this.totalElapsed(car);
       if (car.totalStartedAt != null && !car.thresholds.yellow && total >= STATUS_THRESHOLDS.yellow) {
         car.thresholds.yellow = true;
@@ -146,8 +167,14 @@ class DriveThruSimulator {
     const isEmptyAtStart = (position) => !occupiedStart.has(position);
     const planMove = (car, target) => plannedMoves.push({ carId: car.id, from: car.position, to: target });
 
+    const waitingCar = this.carAt('window3');
+    if (waitingCar && this.canMoveFrom('window3')) planMove(waitingCar, 'exit');
+
     const presentCar = this.carAt('present');
-    if (presentCar && this.canMoveFrom('present')) planMove(presentCar, 'exit');
+    if (presentCar && this.canMoveFrom('present')) {
+      const destination = presentCar.destination === 'window3' ? 'window3' : 'exit';
+      if (destination === 'exit' || isEmptyAtStart('window3')) planMove(presentCar, destination);
+    }
 
     const gapPresentCar = this.carAt('gap_present1');
     if (gapPresentCar && this.canMoveFrom('gap_present1') && isEmptyAtStart('present')) planMove(gapPresentCar, 'present');
@@ -197,6 +224,15 @@ class DriveThruSimulator {
       const target = move.to;
       const previousMeta = POSITION_META[previous];
 
+      // A car at Window 3 has already been counted at Present. Removing it
+      // must never add another result or change its recorded service times.
+      if (previous === 'window3') {
+        this.activeCars = this.activeCars.filter((active) => active.id !== car.id);
+        events.push({ type: 'waiting-completed', carId: car.id });
+        this.statusMessage = `Car #${car.id} left Window 3.`;
+        continue;
+      }
+
       if (previousMeta.station) {
         const elapsed = this.now - car.positionEnteredAt;
         car.timings[previous] = elapsed;
@@ -204,12 +240,15 @@ class DriveThruSimulator {
         if (previous === 'order1' || previous === 'order2') car.totalStartedAt = this.now;
       }
 
-      if (target === 'exit') {
+      if (previous === 'present') {
         car.timings.total = car.totalStartedAt != null ? this.now - car.totalStartedAt : 0;
         car.completedAt = this.now;
-        this.completedCars.unshift({ ...car });
+        this.completedCars.unshift({ ...car, timings: { ...car.timings }, thresholds: { ...car.thresholds } });
+        events.push({ type: 'car-completed', carId: car.id, lane: car.lane, waiting: target === 'window3' });
+      }
+
+      if (target === 'exit') {
         this.activeCars = this.activeCars.filter((active) => active.id !== car.id);
-        events.push({ type: 'car-completed', carId: car.id, lane: car.lane });
         this.statusMessage = `Car #${car.id} completed the drive thru.`;
       } else {
         car.position = target;
@@ -217,6 +256,7 @@ class DriveThruSimulator {
         if (previous === 'order1' || previous === 'order2') car.orderReleaseAt = this.now;
         if (target === 'cash') car.orderReleaseAt = null;
         events.push({ type: 'car-moved', carId: car.id, from: previous, to: target });
+        if (target === 'window3') this.statusMessage = `Car #${car.id} is waiting at Window 3. Results recorded; waiting time is separate.`;
       }
     }
   }
@@ -243,25 +283,28 @@ function computeScoreboard(completedCars) {
 }
 
 
+
 const STORAGE_KEY = 'drive-thru-timer-map-v2';
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 
 
 
-const MAP_SIZE = { width: 1062, height: 823 };
+const MAP_SIZE = { width: 1240, height: 1020 };
 const POSITION_UI = {
-  present: { x: 274, y: 125, rotation: 180 },
-  gap_present1: { x: 421, y: 125, rotation: 180 },
-  cash: { x: 568, y: 125, rotation: 180 },
-  gap_cash_entry: { x: 717, y: 125, rotation: 180 },
-  shared_vertical: { x: 776, y: 271, rotation: -90 },
-  lane1_post: { x: 776, y: 417, rotation: -90 },
-  lane2_merge: { x: 895, y: 412, rotation: -130 },
-  order1: { x: 776, y: 576, rotation: -90 },
-  lane1_pre1: { x: 776, y: 735, rotation: -90 },
-  order2: { x: 968, y: 576, rotation: -90 },
-  lane2_pre1: { x: 968, y: 735, rotation: -90 },
+  // Car centres follow the screenshot's two vertical entry lanes and top road.
+  window3: { x: 120, y: 170, rotation: 180 },
+  present: { x: 315, y: 170, rotation: 180 },
+  gap_present1: { x: 495, y: 170, rotation: 180 },
+  cash: { x: 675, y: 170, rotation: 180 },
+  gap_cash_entry: { x: 855, y: 170, rotation: 180 },
+  shared_vertical: { x: 900, y: 350, rotation: -90 },
+  lane1_post: { x: 900, y: 530, rotation: -90 },
+  lane2_merge: { x: 1048, y: 453, rotation: -135 },
+  order1: { x: 900, y: 710, rotation: -90 },
+  lane1_pre1: { x: 900, y: 910, rotation: -90 },
+  order2: { x: 1120, y: 710, rotation: -90 },
+  lane2_pre1: { x: 1120, y: 910, rotation: -90 },
 };
 
 const simulator = new DriveThruSimulator(loadState());
@@ -327,7 +370,7 @@ function statusFromTotal(total) {
 }
 
 function carStatus(car) {
-  return statusFromTotal(simulator.totalElapsed(car));
+  return car.position === 'window3' ? waitingStatus(simulator.stationElapsed(car)) : statusFromTotal(simulator.totalElapsed(car));
 }
 
 function carImageForStatus(status) {
@@ -505,6 +548,11 @@ function renderLiveSectionLabels() {
   $('#labelCashTime').textContent = labels.cash ? formatTime(simulator.stationElapsed(labels.cash)) : '0:00';
   $('#labelOrder1Time').textContent = labels.order1 ? formatTime(simulator.stationElapsed(labels.order1)) : '0:00';
   $('#labelOrder2Time').textContent = labels.order2 ? formatTime(simulator.stationElapsed(labels.order2)) : '0:00';
+  const waitingCar = simulator.carAt('window3');
+  const waitingTime = $('#labelWindow3Time');
+  waitingTime.textContent = waitingCar ? formatTime(simulator.stationElapsed(waitingCar)) : '0:00';
+  waitingTime.className = `waiting-time status-${waitingCar ? waitingStatus(simulator.stationElapsed(waitingCar)) : 'green'}`;
+  $('#labelWindow3Car').textContent = waitingCar ? `Waiting · #${waitingCar.id}` : 'Waiting · Empty';
   setReadyTick('#tickCash', Boolean(labels.cash && labels.cash.releaseRequested));
   setReadyTick('#tickOrder1', Boolean(labels.order1 && labels.order1.releaseRequested));
   setReadyTick('#tickOrder2', Boolean(labels.order2 && labels.order2.releaseRequested));
@@ -523,7 +571,10 @@ function renderControlsState() {
   $('#btnReleaseOrder1').disabled = !simulator.carAt('order1');
   $('#btnReleaseOrder2').disabled = !simulator.carAt('order2');
   $('#btnReleaseCash').disabled = !simulator.carAt('cash');
-  $('#btnReleasePresent').disabled = !simulator.carAt('present');
+  const presentCar = simulator.carAt('present');
+  $('#btnReleasePresent').disabled = !presentCar || presentCar.releaseRequested;
+  $('#btnSendWindow3').disabled = !presentCar || presentCar.releaseRequested || !!simulator.carAt('window3');
+  $('#btnReleaseWindow3').disabled = !simulator.carAt('window3') || simulator.carAt('window3').releaseRequested;
 }
 
 
@@ -536,6 +587,10 @@ function renderCars() {
     const status = carStatus(car);
     const wrapper = document.createElement('div');
     wrapper.className = 'car';
+    wrapper.dataset.carId = String(car.id);
+    wrapper.dataset.position = car.position;
+    wrapper.dataset.status = status;
+    wrapper.style.setProperty('--badge-rotation', `${-ui.rotation}deg`);
     wrapper.style.left = `${(ui.x / MAP_SIZE.width) * 100}%`;
     wrapper.style.top = `${(ui.y / MAP_SIZE.height) * 100}%`;
     wrapper.style.transform = `translate(-50%, -50%) rotate(${ui.rotation}deg)`;
@@ -604,8 +659,13 @@ async function handleEvents(events) {
       await playSound('red', 2);
       setStatus(`Car #${event.carId} turned red at 2:00 total time.`);
     }
+    if (event.type === 'waiting-completed') {
+      setStatus(`Car #${event.carId} left Window 3. Results unchanged.`);
+    }
     if (event.type === 'car-completed') {
-      setStatus(`Car #${event.carId} left present and was counted as a completed car.`);
+      setStatus(event.waiting
+        ? `Car #${event.carId} moved to Window 3. Results recorded; waiting timer started at 0:00.`
+        : `Car #${event.carId} left Present and was counted as a completed car.`);
     }
   }
 }
@@ -628,6 +688,13 @@ function releaseStation(station) {
   render();
 }
 
+
+function sendToWindow3() {
+  const result = simulator.sendToWindow3();
+  setStatus(result.reason || simulator.statusMessage);
+  saveState();
+  render();
+}
 
 function resetDay() {
   if (!window.confirm('Reset all active cars, averages and completed history?')) return;
@@ -675,6 +742,8 @@ function wireButtons() {
   $('#btnReleaseOrder2').addEventListener('click', () => releaseStation('order2'));
   $('#btnReleaseCash').addEventListener('click', () => releaseStation('cash'));
   $('#btnReleasePresent').addEventListener('click', () => releaseStation('present'));
+  $('#btnSendWindow3').addEventListener('click', sendToWindow3);
+  $('#btnReleaseWindow3').addEventListener('click', () => releaseStation('window3'));
   $('#btnEnableSounds').addEventListener('click', enableSounds);
   $('#btnFullscreen').addEventListener('click', toggleFullscreen);
   $('#btnExitFullscreen').addEventListener('click', toggleFullscreen);
@@ -689,6 +758,7 @@ function wireButtons() {
   $('#btnReset').addEventListener('click', resetDay);
 
   document.addEventListener('keydown', (event) => {
+    if (event.repeat || event.ctrlKey || event.altKey || event.metaKey || event.target.closest('input, textarea, select, [contenteditable]')) return;
     const key = event.key.toLowerCase();
     if (key === '1') addCar(1);
     if (key === '2') addCar(2);
@@ -696,6 +766,8 @@ function wireButtons() {
     if (key === 'w') releaseStation('order2');
     if (key === 'c') releaseStation('cash');
     if (key === 'p') releaseStation('present');
+    if (key === 'h') sendToWindow3();
+    if (key === 'r') releaseStation('window3');
     if (key === 'f') toggleFullscreen();
   });
 }
@@ -708,3 +780,4 @@ setStatus(simulator.statusMessage || 'Ready.');
 render();
 setInterval(runTick, 1000);
 setInterval(setClock, 30000);
+

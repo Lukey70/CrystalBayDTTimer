@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Drive Thru Timer Map</title>
-  <link rel="stylesheet" href="styles.css">
+  <title>Crystal Bay Drive Thru Timer</title>
+  <link rel="stylesheet" href="styles.css?v=crystal-window3-20261024">
 </head>
 <body>
   <button id="btnExitFullscreen" class="exit-fullscreen" type="button">Exit Fullscreen</button>
@@ -12,8 +12,8 @@
     <header class="app-header">
       <div>
         <p class="eyebrow">Drive Thru Timer</p>
-        <h1>Two Lane Map View</h1>
-        <p class="subtext">This version keeps the original Bloxburg blue design but uses the corrected new-store layout: Lane 1 is the left vertical lane, Lane 2 is the right vertical lane, each has one pre-order space, Lane 1 has one post-order space before the merge, Lane 2 has one diagonal post-order merge space that connects cleanly into the shared lane, then one shared vertical space leads into the horizontal Cash and Present lane.</p>
+        <h1>Crystal Bay</h1>
+        <p class="subtext">Two ordering lanes, Cash and Present, plus a separate waiting timer at Window 3.</p>
       </div>
       <div class="header-tools">
         <div class="clock-card">
@@ -84,15 +84,18 @@
             <button id="btnReleaseOrder2" class="warning">Order 2 Complete</button>
             <button id="btnReleaseCash" class="info">Cash Complete</button>
             <button id="btnReleasePresent" class="info">Present Complete</button>
+            <button id="btnSendWindow3" class="warning">Send to Window 3</button>
+            <button id="btnReleaseWindow3" class="info">Window 3 Complete</button>
             <button id="btnReset" class="danger">Reset Day</button>
           </div>
-          <p class="hint">Keyboard shortcuts: 1 = Add Lane 1, 2 = Add Lane 2, Q = Order 1 complete, W = Order 2 complete, C = Cash complete, P = Present complete, F = Fullscreen.</p>
+          <p class="hint">Send a car from Present to Window 3 when it needs to wait. Its service results are recorded on leaving Present; the separate waiting timer turns yellow at 1:30 and red at 2:00.</p>
+          <p class="hint">Keyboard shortcuts: 1 = Add Lane 1, 2 = Add Lane 2, Q = Order 1 complete, W = Order 2 complete, C = Cash complete, P = Present complete, H = Send to Window 3, R = Window 3 complete, F = Fullscreen.</p>
         </article>
 
         <article class="history-card">
           <div class="history-header">
             <h3>Completed Cars</h3>
-            <span>Averages update only after the car leaves the drive thru.</span>
+            <span>Results recorded on leaving Present. Window 3 waiting time is excluded.</span>
           </div>
           <div class="table-wrap">
             <table>
@@ -117,22 +120,33 @@
       <section class="right-column">
         <article class="map-panel">
           <div class="map-frame">
-            <svg class="lane-svg" viewBox="0 0 1062 823" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-              
-<g class="lane-outline">
-                <path d="M 138 125 H 776" />
-                <path d="M 776 735 V 125" />
-                <path d="M 968 735 V 505" />
-                <path d="M 968 505 L 776 271" />
+            <svg class="lane-svg" viewBox="0 0 1240 1020" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+              <g class="lane-outline">
+                <path d="M 900 1020 V 225 Q 900 170 845 170 H 30" />
+                <path d="M 1120 1020 V 550 Q 1120 525 1102 507 L 930 335 Q 900 305 900 265" />
               </g>
               <g class="lane-road">
-                <path d="M 138 125 H 776" />
-                <path d="M 776 735 V 125" />
-                <path d="M 968 735 V 505" />
-                <path d="M 968 505 L 776 271" />
+                <path d="M 900 1020 V 225 Q 900 170 845 170 H 30" />
+                <path d="M 1120 1020 V 550 Q 1120 525 1102 507 L 930 335 Q 900 305 900 265" />
+              </g>
+              <g class="station-bays">
+                <rect x="30" y="126" width="180" height="88" rx="8" />
+                <rect x="225" y="126" width="180" height="88" rx="8" />
+                <rect x="585" y="126" width="180" height="88" rx="8" />
+                <rect x="856" y="620" width="88" height="180" rx="8" />
+                <rect x="1076" y="620" width="88" height="180" rx="8" />
+              </g>
+              <g class="entry-bays">
+                <rect x="856" y="820" width="88" height="180" rx="8" />
+                <rect x="1076" y="820" width="88" height="180" rx="8" />
               </g>
             </svg>
 
+            <div class="label window3-label">
+              <strong>Window 3</strong>
+              <small id="labelWindow3Car">Waiting · Empty</small>
+              <span id="labelWindow3Time" class="waiting-time status-green">0:00</span>
+            </div>
             <div class="label present-label">
               <strong>Present</strong>
               <span id="labelPresentTime">0:00</span>
@@ -158,13 +172,15 @@
               <div class="summary-divider"></div>
               <span>Total Time</span>
               <strong id="longestWait" class="status-green">0:00</strong>
-              <em>Longest waiting car</em>
+              <em>Longest current service time</em>
+              <small>Window 3 tracked separately</small>
             </div>
           </div>
         </article>
       </section>
     </section>
   </main>
-  <script src="app.js"></script>
+  <script src="app.js?v=crystal-window3-20261024"></script>
 </body>
 </html>
+

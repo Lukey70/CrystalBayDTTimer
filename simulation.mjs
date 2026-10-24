@@ -11,6 +11,15 @@ export const STATUS_THRESHOLDS = {
   red: 120,
 };
 
+// Window 3 is a separate, visual-only clock measured from arrival.
+export const WAITING_THRESHOLDS = { yellow: 90, red: 120 };
+
+export function waitingStatus(seconds) {
+  if (seconds >= WAITING_THRESHOLDS.red) return 'red';
+  if (seconds >= WAITING_THRESHOLDS.yellow) return 'yellow';
+  return 'green';
+}
+
 export const POSITION_META = {
   lane1_pre1: { next: 'order1' },
   order1: { next: 'lane1_post', station: 'order1' },
@@ -25,9 +34,10 @@ export const POSITION_META = {
   cash: { next: 'gap_present1', station: 'cash' },
   gap_present1: { next: 'present' },
   present: { next: 'exit', station: 'present' },
+  window3: { next: 'exit', station: 'window3' },
 };
 
-const STATIONS = new Set(['order1', 'order2', 'cash', 'present']);
+const STATIONS = new Set(['order1', 'order2', 'cash', 'present', 'window3']);
 
 export class DriveThruSimulator {
   constructor(savedState = null) {
@@ -92,10 +102,21 @@ export class DriveThruSimulator {
     return { ok: true, car };
   }
 
+  sendToWindow3() {
+    const car = this.carAt('present');
+    if (!car) return { ok: false, reason: 'No car at Present.' };
+    if (this.carAt('window3')) return { ok: false, reason: 'Window 3 is occupied. Complete that car first.' };
+    if (car.releaseRequested) return { ok: false, reason: `Car #${car.id} is already leaving Present.` };
+    car.destination = 'window3';
+    car.releaseRequested = true;
+    this.statusMessage = `Car #${car.id} will move from Present to Window 3.`;
+    return { ok: true, car };
+  }
+
   stationElapsed(car) { return this.now - car.positionEnteredAt; }
-  totalElapsed(car) { return car.totalStartedAt == null ? 0 : this.now - car.totalStartedAt; }
-  getCarsInLaneCount() { return this.activeCars.length; }
-  getLongestCurrentTotal() { let longest = 0; for (const car of this.activeCars) longest = Math.max(longest, this.totalElapsed(car)); return longest; }
+  totalElapsed(car) { return car.completedAt != null ? car.timings.total : car.totalStartedAt == null ? 0 : this.now - car.totalStartedAt; }
+  getCarsInLaneCount() { return this.activeCars.filter((car) => car.position !== 'window3').length; }
+  getLongestCurrentTotal() { let longest = 0; for (const car of this.activeCars) if (car.position !== 'window3') longest = Math.max(longest, this.totalElapsed(car)); return longest; }
 
   tick(seconds = 1) {
     const allEvents = [];
@@ -111,6 +132,7 @@ export class DriveThruSimulator {
 
   processThresholds(events) {
     for (const car of this.activeCars) {
+      if (car.position === 'window3') continue;
       const total = this.totalElapsed(car);
       if (car.totalStartedAt != null && !car.thresholds.yellow && total >= STATUS_THRESHOLDS.yellow) {
         car.thresholds.yellow = true;
@@ -145,8 +167,14 @@ export class DriveThruSimulator {
     const isEmptyAtStart = (position) => !occupiedStart.has(position);
     const planMove = (car, target) => plannedMoves.push({ carId: car.id, from: car.position, to: target });
 
+    const waitingCar = this.carAt('window3');
+    if (waitingCar && this.canMoveFrom('window3')) planMove(waitingCar, 'exit');
+
     const presentCar = this.carAt('present');
-    if (presentCar && this.canMoveFrom('present')) planMove(presentCar, 'exit');
+    if (presentCar && this.canMoveFrom('present')) {
+      const destination = presentCar.destination === 'window3' ? 'window3' : 'exit';
+      if (destination === 'exit' || isEmptyAtStart('window3')) planMove(presentCar, destination);
+    }
 
     const gapPresentCar = this.carAt('gap_present1');
     if (gapPresentCar && this.canMoveFrom('gap_present1') && isEmptyAtStart('present')) planMove(gapPresentCar, 'present');
@@ -196,6 +224,15 @@ export class DriveThruSimulator {
       const target = move.to;
       const previousMeta = POSITION_META[previous];
 
+      // A car at Window 3 has already been counted at Present. Removing it
+      // must never add another result or change its recorded service times.
+      if (previous === 'window3') {
+        this.activeCars = this.activeCars.filter((active) => active.id !== car.id);
+        events.push({ type: 'waiting-completed', carId: car.id });
+        this.statusMessage = `Car #${car.id} left Window 3.`;
+        continue;
+      }
+
       if (previousMeta.station) {
         const elapsed = this.now - car.positionEnteredAt;
         car.timings[previous] = elapsed;
@@ -203,12 +240,15 @@ export class DriveThruSimulator {
         if (previous === 'order1' || previous === 'order2') car.totalStartedAt = this.now;
       }
 
-      if (target === 'exit') {
+      if (previous === 'present') {
         car.timings.total = car.totalStartedAt != null ? this.now - car.totalStartedAt : 0;
         car.completedAt = this.now;
-        this.completedCars.unshift({ ...car });
+        this.completedCars.unshift({ ...car, timings: { ...car.timings }, thresholds: { ...car.thresholds } });
+        events.push({ type: 'car-completed', carId: car.id, lane: car.lane, waiting: target === 'window3' });
+      }
+
+      if (target === 'exit') {
         this.activeCars = this.activeCars.filter((active) => active.id !== car.id);
-        events.push({ type: 'car-completed', carId: car.id, lane: car.lane });
         this.statusMessage = `Car #${car.id} completed the drive thru.`;
       } else {
         car.position = target;
@@ -216,6 +256,7 @@ export class DriveThruSimulator {
         if (previous === 'order1' || previous === 'order2') car.orderReleaseAt = this.now;
         if (target === 'cash') car.orderReleaseAt = null;
         events.push({ type: 'car-moved', carId: car.id, from: previous, to: target });
+        if (target === 'window3') this.statusMessage = `Car #${car.id} is waiting at Window 3. Results recorded; waiting time is separate.`;
       }
     }
   }
@@ -240,3 +281,4 @@ export function computeScoreboard(completedCars) {
     total: { avg: avg(totalValues), pct: underPct(totalValues, TARGETS.total) },
   };
 }
+

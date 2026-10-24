@@ -1,16 +1,14 @@
-JavaScript syntax check for simulation.mjs: PASS
-JavaScript syntax check for app.js: PASS
-Simulation logic tests in tests.mjs: PASS
-Original Bloxburg blue design retained: PASS
-Lane width increased to original-style Bloxburg sizing: PASS
-Cars resized to suit the larger lanes: PASS
-Order 1 label remains visible on screen: PASS
-Order 2 label remains visible on screen: PASS
-Cash and Present labels remain underneath the top lane: PASS
-One pre-order space per lane retained: PASS
-Timing targets retained: PASS
-Embedded assets retained: PASS
+Crystal Bay layout and Window 3 update — 24 October 2026
 
-Verification note:
-- I confirmed the CSS values now match the original-style Bloxburg lane sizing request (78 / 62).
-- I could not do a true rendered browser screenshot check in this environment, so I am not claiming visual confirmation beyond the implemented CSS/layout values.
+PASS: node --check app.js
+PASS: node --check simulation.mjs
+PASS: node tests.mjs — all 16 simulation tests
+
+Verified: original queue movement and merge priority; Window 3 starts at zero;
+green/yellow/red boundaries at 90 and 120 seconds; exactly one recorded result
+on departure from Present; no waiting time in averages, targets, completed-car
+results or longest current service time; occupied Window 3 rejects transfers;
+other cars can exit normally; saved-state reloads; reset; browser engine parity.
+
+Map geometry inspected with all car spaces occupied: centred cars, separate
+station labels, full entry spaces, and smooth connected lanes.

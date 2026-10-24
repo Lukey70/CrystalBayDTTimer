@@ -1,172 +1,54 @@
-# Drive Thru Timer Website
+# Crystal Bay Drive Thru Timer
 
-This is the latest static GitHub Pages-ready version of the drive thru timer website.
+Static, GitHub Pages-ready timer with the original blue theme, embedded car images and sounds, results board, keyboard controls and fullscreen display.
 
-## Included in this version
+## Layout
 
-- Two separate lanes running up the right side of the map.
-- Visual map layout matching the requested reference direction.
-- Cars spawn two spaces before the speaker in Lane 1 or Lane 2.
-- Cars move one space per second anywhere in the drive thru when the space ahead is clear.
-- Order, Cash and Present only release when their button is pressed.
-- If a station button is pressed while blocked, the car waits there and that section timer keeps counting until the car actually leaves.
-- Lane 1 path after order: Order 1 -> 1 gap to Cash -> Cash.
-- Lane 2 path after order: Order 2 -> 2 gap to Cash -> 1 gap to Cash -> Cash.
-- One gap between Cash and Present.
-- Cars leaving Present count as completed.
-- The left-side averages and percentages update using completed cars only.
-- Percentages are coloured as requested:
-  - 75% to 100% = green
-  - 50% to under 75% = yellow
-  - under 50% = red
-- Total target is 1:00.
-- Every section target is 0:30.
-- Car colours:
-  - under 1:00 total = green
-  - at 1:00 total = yellow
-  - at 1:30 total = red
-- Entry and threshold sound files are included in `assets/`.
-- Enable Sounds / Test Sound button added to help with browser audio restrictions.
+The map follows the Crystal Bay reference: two entry lanes on the right, a diagonal merge from Order 2, and a top road travelling left through Cash and Present to Window 3 (the Cafe position in the reference). Cars are centred on wider lanes, with station labels outside the road. The existing queue spaces and one-second movement rules are retained. Each ordering lane has a full entry space before its speaker.
 
-## Files
+## Window 3 waiting
 
-- `index.html`
-- `styles.css`
-- `app.js`
-- `simulation.mjs`
-- `tests.mjs`
-- `assets/`
+- **Send to Window 3** moves the car at Present to the waiting window on the next movement tick.
+- Its Order, Cash, Present and Total results are recorded once, when it leaves Present.
+- The car remains visible at Window 3 with a separate clock starting at **0:00** on arrival.
+- Both the waiting car and its clock are green below **1:30**, yellow from **1:30** to **1:59**, and red from **2:00** onwards. These changes are visual only.
+- **Window 3 Complete** removes the waiting car without recording another result.
+- Waiting time never contributes to service averages, target percentages, completed-car results, or the live longest service time. The car at Window 3 is excluded from Cars in Lane.
+- Window 3 holds one car. If occupied, sending another car there is disabled; other cars can still leave Present normally.
+- Waiting cars, clocks, pending transfers and recorded results survive a page reload. Reset Day clears the whole day, including Window 3.
 
-## Keyboard shortcuts
+## Controls
 
-- `1` = Add Car Lane 1
-- `2` = Add Car Lane 2
-- `Q` = Order 1 complete
-- `W` = Order 2 complete
-- `C` = Cash complete
-- `P` = Present complete
+| Key | Action |
+| --- | --- |
+| 1 / 2 | Add a car to Lane 1 / Lane 2 |
+| Q / W | Complete Order 1 / Order 2 |
+| C | Complete Cash |
+| P | Complete Present and exit normally |
+| H | Send the car at Present to Window 3 |
+| R | Complete Window 3 |
+| F | Toggle fullscreen |
 
-## Publish on GitHub Pages
+Order and Cash releases wait until the next space is free; their clocks continue until the car actually moves. Total time starts on departure from the ordering speaker and stops on departure from Present.
 
-1. Create a GitHub repository.
-2. Upload everything in this folder.
-3. Go to **Settings -> Pages**.
-4. Choose **Deploy from a branch**.
-5. Select the `main` branch and `/root`.
-6. Save.
+## Targets
 
-## Tests run before packaging
+| Result | Target |
+| --- | --- |
+| Order 1 / Order 2 / Cash | 0:30 |
+| Present | 1:00 |
+| Total | 1:30 |
 
-- JavaScript syntax check for `simulation.mjs`
-- JavaScript syntax check for `app.js`
-- Full simulation logic tests in `tests.mjs`
+Normal car colours and total-time sounds use yellow at 1:30 and red at 2:00. Audio starts after the first interaction, subject to browser audio permissions. Use Enable Sounds or Test All Sounds if needed.
 
+## Run and verify
 
-## Asset display fix
+Open `index.html`, or serve this directory with a static HTTP server. For GitHub Pages, deploy the root of `main`.
 
-This build embeds the car sprite images directly into `app.js` as data URLs. That means the cars still display even if the browser has trouble resolving `assets/car_green.png`, `assets/car_yellow.png`, or `assets/car_red.png`.
+```sh
+node --check app.js
+node --check simulation.mjs
+node tests.mjs
+```
 
-
-## Sound playback fix
-
-This version embeds the audio files directly into `app.js` and uses the Web Audio API instead of relying on `<audio>` file paths. Sounds are on by default, but browser rules still require one user click before playback. Press **Enable Sounds** or **Test All Sounds** once after opening the page.
-
-
-## Additional changes in this version
-
-- Smoothed the lane merge so it appears as a continuous connected drive-thru road.
-- Removed visible gap labels while keeping the same spacing and movement logic.
-- Changed the blue map background to a solid colour with no square grid.
-- Added Fullscreen Mode showing the results on the left and the drive-thru map on the right.
-- Changed the board heading to `Car Count` and added a completed car counter.
-- Kept the embedded image and audio fixes so the car assets and sounds work more reliably.
-
-
-## Latest requested changes in this version
-
-- Present target changed to 1:00.
-- Total-time colour and sound thresholds changed to yellow at 1:30 and red at 2:00.
-- The live total-time display now uses the same colour as the car status.
-- Lane merge artwork refined to look smoother with less overlap.
-- Labels moved outside the lanes.
-- Car positions adjusted to sit in the middle of the lanes, with Lane 2 merge cars angled to match the curve.
-- Fullscreen map positions improved by using a responsive aspect-ratio layout.
-- Cars now advance one space at a time with a one-second stagger after a completed car leaves the drive thru.
-- Reset Day now resets the simulator immediately without relying on a page reload.
-
-
-## Latest compact-map fixes
-
-- Compressed the physical spacing of the drive-thru map while keeping the same logical spaces and movement rules.
-- Repositioned cars so they remain centred in the adjusted lanes.
-- Corrected the Lane 2 merge car to angle left into the shared lane.
-- Repositioned labels so Order 1 sits to the left of the Order 1 car, Order 2 sits to the right of the Order 2 car, and Cash/Present sit underneath their cars.
-- Added ready-to-move tick indicators for Order 1, Order 2, and Cash after their buttons are pressed.
-
-
-## Latest lane-position fixes
-
-- Extended the visual entry lane so spawned cars sit fully inside the lane and are not touching each other.
-- Extended the present/end lane so the car at Present sits inside the lane more cleanly.
-- Re-centred the Lane 2 merge car on the curve while keeping it angled left into the shared lane.
-- Moved Order 1 and Order 2 labels closer to the drive-thru, but still outside the lane.
-- Moved the live Cars in Lane / Total Time panel left so it sits outside the drive-thru lane.
-
-
-## Latest timing and lane-centering updates
-
-- Total target time changed to 1:30.
-- Live Total Time and the Total result on the left now use green under 1:30, yellow from 1:30 up to under 2:00, and red at 2:00 and over.
-- Left-side average colours now use: Order 1 / Order 2 / Cash = green under 0:30, yellow 0:30-0:45, red over 0:45; Present = green under 1:00, yellow 1:00-1:30, red over 1:30.
-- Extended the visual entrance slightly more so spawned cars sit fully inside the lane.
-- Fine-tuned the Lane 2 merge-turn car position again so it sits more centrally between the lane edges while turning.
-
-- Extended the visual entry lane a touch further again and moved the spawn centres so cars start fully inside the lane.
-- Extended the present lane a touch further again so the present car sits fully inside the lane.
-- Fine-tuned the Lane 2 merge-turn car again to sit closer to the centre of the curved lane.
-
-
-## New store layout on original Bloxburg design
-
-- Keeps the original blue Bloxburg visual design, controls, results board, sounds, and car assets.
-- Lane 1 is the left vertical lane and Lane 2 is the right vertical lane.
-- Each lane has one pre-order space.
-- Lane 1 has one post-order space before the merge.
-- Lane 2 has one forward diagonal merge space before entering the shared vertical space.
-- The shared section has one vertical space after the merge, then one horizontal space before Cash, then Cash, then one horizontal space before Present.
-
-
-## Immediate layout fixes
-- Lanes have been widened much more visibly using a larger road stroke.
-- Car sprite sizing has been lightly reduced so cars fit comfortably inside the widened lanes.
-- Order 1 and Order 2 labels have been moved further right.
-- Cash and Present labels have been moved clearly underneath the top drive-thru lane.
-
-
-## Lane width adjustment
-- Reduced the lane width from the previous version because it was too wide.
-- New lane width is a middle point: wider than the earlier too-narrow version, but narrower than the last version.
-- Label positions, car assets, sounds, movement logic and fullscreen mode were retained.
-
-
-## Immediate thin-lane fix
-
-- Reduced the drive-thru lanes back down to a thickness much closer to the original Bloxburg design.
-- Reduced the car size slightly so cars sit comfortably in the thinner lanes.
-- Repositioned labels so Order 1 and Order 2 stay visible on screen and Cash/Present remain underneath the drive-thru lane.
-
-
-## Immediate visible fix
-- Lanes were reduced to a clearly thinner size: outline 64px, road 48px.
-- Cars were reduced to fit the thinner lanes.
-- Labels were repositioned so they are visibly moved and not cut off.
-- Cash and Present labels are below the top lane.
-- Order 2 label is kept inside the map bounds instead of being cut off on the right.
-
-
-## Lane width restored closer to Bloxburg
-
-- Increased the lane width back up so it is closer to the original Bloxburg map lane thickness.
-- Lane outline is 78px and lane road is 62px.
-- Cars were increased slightly to suit the restored lane size.
-- Existing label positions and layout logic were retained.
+The test suite covers both entry lanes, queue movement, merge priority, blocked stations, completion statistics, normal thresholds, Window 3 colour boundaries, result isolation, occupied-window handling, normal exits while Window 3 is occupied, reloads, resets, and parity between the browser and tested simulation engine.
