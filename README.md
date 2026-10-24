@@ -61,3 +61,7 @@ node ui-tests.mjs
 ```
 
 The 20 simulation tests cover entry lanes, queue movement, merge priority, blocked stations, completion statistics, Present average colour boundaries, the 30-second Present target, Window 3 colour boundaries, exact transfer/handover delays, FIFO queueing, result isolation, normal exits, reloads at each queue phase, reset, and browser-engine parity. `ui-tests.mjs` also exercises the actual browser script, DOM rendering and button bindings without external dependencies.
+
+## Preview
+
+![Present target and three-car Window 3 queue](crystal-bay-queue-preview-20261024.jpg)

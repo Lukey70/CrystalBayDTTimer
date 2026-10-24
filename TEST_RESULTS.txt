@@ -19,3 +19,7 @@ Verified:
 - Window 3 clock starts at zero on arrival; green/yellow/red boundaries retained.
 - Normal exits can bypass both waiting spaces; reset clears the entire queue.
 - Browser script executes the same engine as the tested simulation module.
+
+LIVE SITE: Pages deployment succeeded. Confirmed 0:30 target, first car at
+Window 3, second held off-screen, third queued at Present, persistence after
+reload, and automatic FIFO advance after completing the first waiting car.
