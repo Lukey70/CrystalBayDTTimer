@@ -19,3 +19,6 @@ results while waiting, normal exits with Window 3 occupied, disabled transfer
 to occupied Window 3, saved state after reload, and yellow waiting status.
 LIVE SITE: Red waiting status confirmed after 2:00. Window 3 departure left
 completed count and service average unchanged; next car can use Window 3.
+
+LIVE SITE: Expanded display fallback verified. Final label clearance adjusted
+so Order 2 sits between the two ordering lanes, clear of the Order 1 car.

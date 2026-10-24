@@ -113,7 +113,7 @@ th { color: var(--muted); font-weight: 700; }
 .present-label { left: 25.40%; top: 3.5%; transform: translateX(-50%); text-align: center; }
 .cash-label { left: 54.44%; top: 3.5%; transform: translateX(-50%); text-align: center; }
 .order1-label { left: 64.5%; top: 69.61%; transform: translate(-100%, -50%); text-align: right; }
-.order2-label { left: 83.1%; top: 69.61%; transform: translate(-100%, -50%); text-align: right; }
+.order2-label { left: 81.45%; top: 69.61%; transform: translate(-50%, -50%); text-align: center; }
 .label .waiting-time.status-green { color: var(--green); }
 .label .waiting-time.status-yellow { color: var(--yellow); }
 .label .waiting-time.status-red { color: var(--red); }
