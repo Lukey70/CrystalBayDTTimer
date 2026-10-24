@@ -64,7 +64,7 @@
             <div class="pct" id="pctCash">0%</div>
           </div>
           <div class="score-row">
-            <div class="name">Present <span class="goal" id="goalPresent">1:00</span></div>
+            <div class="name">Present <span class="goal" id="goalPresent">0:30</span></div>
             <div class="avg" id="avgPresent">0:00</div>
             <div class="pct" id="pctPresent">0%</div>
           </div>
@@ -88,7 +88,8 @@
             <button id="btnReleaseWindow3" class="info">Window 3 Complete</button>
             <button id="btnReset" class="danger">Reset Day</button>
           </div>
-          <p class="hint">Send a car from Present to Window 3 when it needs to wait. Its service results are recorded on leaving Present; the separate waiting timer turns yellow at 1:30 and red at 2:00.</p>
+          <p class="hint">Window 3 transfers take at least 3 seconds off-screen. One car can wait off-screen behind the car at Window 3; further requests queue at Present. The next car appears 1 second after Window 3 clears, once its transfer is complete. Results are recorded on leaving Present; the waiting timer starts on arrival.</p>
+          <p id="window3QueueStatus" class="hint">Window 3 transfer space is clear.</p>
           <p class="hint">Keyboard shortcuts: 1 = Add Lane 1, 2 = Add Lane 2, Q = Order 1 complete, W = Order 2 complete, C = Cash complete, P = Present complete, H = Send to Window 3, R = Window 3 complete, F = Fullscreen.</p>
         </article>
 
@@ -180,7 +181,8 @@
       </section>
     </section>
   </main>
-  <script src="app.js?v=crystal-window3-20261024-2"></script>
+  <script src="app.js?v=crystal-window3-queue-20261024"></script>
 </body>
 </html>
+
 

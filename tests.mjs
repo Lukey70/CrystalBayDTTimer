@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { DriveThruSimulator, computeScoreboard, TARGETS, waitingStatus } from './simulation.mjs';
+import { DriveThruSimulator, computeScoreboard, TARGETS, waitingStatus, resultAverageClass } from './simulation.mjs';
 function runTicks(sim, seconds) { for (let i = 0; i < seconds; i += 1) sim.tick(1); }
 
 function testTargets() {
-  assert.equal(TARGETS.present, 60);
+  assert.equal(TARGETS.present, 30);
   assert.equal(TARGETS.total, 90);
 }
 
@@ -102,7 +102,18 @@ function testWindow3RecordsOnceAndExcludesWaiting() {
   assert.equal(sim.sendToWindow3().ok, false, 'Cannot send twice');
   assert.equal(sim.completedCars.length, 0, 'Result waits for actual departure from Present');
   let events = sim.tick();
+  assert.equal(sim.carAt('present'), null);
+  assert.equal(sim.carAt('window3'), null);
+  assert.equal(sim.carAt('window3_transfer').id, car.id);
+  const departedAt = sim.now;
+  assert.equal(sim.getCarsInLaneCount(), 0);
+  assert.equal(sim.getLongestCurrentTotal(), 0);
+  sim.tick(2);
+  assert.equal(sim.carAt('window3'), null, 'Hidden for the full first two seconds');
+  const arrivalEvents = sim.tick();
+  assert.equal(sim.now, departedAt + 3);
   assert.equal(sim.carAt('window3').id, car.id);
+  assert.ok(arrivalEvents.some(e => e.type === 'waiting-arrived'));
   assert.equal(sim.completedCars.length, 1);
   assert.equal(events.filter(e => e.type === 'car-completed').length, 1);
   assert.equal(sim.stationElapsed(car), 0);
@@ -133,18 +144,120 @@ function testWindow3RecordsOnceAndExcludesWaiting() {
   assert.equal(JSON.stringify(sim.completedCars), results, 'No second result on waiting departure');
 }
 
+function departToWindow3(sim) {
+  assert.equal(sim.sendToWindow3().ok, true);
+  sim.tick();
+}
+
 function testOccupiedWindow3AndOtherCarsCanExit() {
   const sim = new DriveThruSimulator();
-  const waiting = carAtPresent(sim);
-  sim.sendToWindow3(); sim.tick();
-  const second = carAtPresent(sim, 2);
-  assert.equal(sim.sendToWindow3().ok, false);
-  assert.equal(sim.carAt('present').id, second.id);
-  assert.equal(second.releaseRequested, false);
+  const first = carAtPresent(sim); departToWindow3(sim); sim.tick(3);
+  const second = carAtPresent(sim, 2); departToWindow3(sim); sim.tick(3);
+  assert.equal(sim.carAt('window3').id, first.id);
+  assert.equal(sim.carAt('window3_transfer').id, second.id);
+  const third = carAtPresent(sim);
   sim.releaseStation('present'); sim.tick();
-  assert.equal(sim.completedCars.length, 2, 'Normal exits pass the waiting car');
-  assert.equal(sim.carAt('window3').id, waiting.id);
+  assert.equal(sim.completedCars.length, 3, 'Normal exits bypass both occupied waiting spaces');
   assert.equal(sim.carAt('present'), null);
+  assert.equal(sim.carAt('window3').id, first.id);
+  assert.equal(sim.carAt('window3_transfer').id, second.id);
+  assert.ok(sim.completedCars.some(car => car.id === third.id));
+}
+
+function testWindow3QueueAndOneSecondHandover() {
+  const sim = new DriveThruSimulator();
+  const first = carAtPresent(sim); departToWindow3(sim); sim.tick(3);
+  const second = carAtPresent(sim, 2); departToWindow3(sim);
+  const secondResult = JSON.stringify(sim.completedCars.find(car => car.id === second.id));
+  const third = carAtPresent(sim);
+  const presentStartedAt = third.positionEnteredAt;
+  assert.equal(sim.sendToWindow3().ok, true, 'A third request queues at Present');
+  assert.equal(sim.sendToWindow3().ok, false, 'Queued requests are not duplicated');
+  sim.tick(10);
+  assert.equal(sim.carAt('present').id, third.id);
+  assert.equal(sim.carAt('window3_transfer').id, second.id);
+  assert.equal(sim.completedCars.length, 2, 'Queued Present car has no result yet');
+  assert.equal(sim.getCarsInLaneCount(), 1);
+  assert.equal(JSON.stringify(sim.completedCars.find(car => car.id === second.id)), secondResult);
+  sim.releaseStation('window3');
+  let events = sim.tick();
+  const firstLeftAt = sim.now;
+  assert.equal(sim.carAt('window3'), null, 'No same-tick replacement');
+  assert.equal(sim.carAt('window3_transfer').id, second.id);
+  assert.equal(sim.carAt('present').id, third.id);
+  assert.equal(events.filter(e => e.type === 'waiting-completed').length, 1);
+  events = sim.tick();
+  assert.equal(sim.now, firstLeftAt + 1);
+  assert.equal(sim.carAt('window3').id, second.id);
+  assert.equal(sim.stationElapsed(second), 0);
+  assert.equal(sim.carAt('present').id, third.id, 'Present follows on the next movement tick');
+  events = sim.tick();
+  assert.equal(sim.carAt('present'), null, 'Queued request advances automatically');
+  assert.equal(sim.carAt('window3_transfer').id, third.id);
+  assert.equal(sim.completedCars.length, 3);
+  assert.equal(third.timings.present, sim.now - presentStartedAt, 'Blocked time counts at Present');
+  assert.equal(events.filter(e => e.type === 'car-completed').length, 1);
+  sim.tick(10);
+  const scores = computeScoreboard(sim.completedCars);
+  sim.releaseStation('window3'); sim.tick();
+  assert.equal(sim.carAt('window3'), null);
+  sim.tick();
+  assert.equal(sim.carAt('window3').id, third.id, 'FIFO is preserved');
+  assert.equal(sim.stationElapsed(third), 0);
+  assert.deepEqual(computeScoreboard(sim.completedCars), scores);
+  assert.equal(JSON.stringify(sim.completedCars.find(car => car.id === second.id)), secondResult);
+}
+
+function testEarlyClearStillHonoursThreeSecondTransfer() {
+  const sim = new DriveThruSimulator();
+  carAtPresent(sim); departToWindow3(sim); sim.tick(3);
+  const next = carAtPresent(sim, 2); departToWindow3(sim);
+  const departedAt = sim.now;
+  sim.releaseStation('window3'); sim.tick();
+  sim.tick();
+  assert.equal(sim.carAt('window3'), null, 'Handover cannot shorten the travel time');
+  sim.tick();
+  assert.equal(sim.now, departedAt + 3);
+  assert.equal(sim.carAt('window3').id, next.id);
+}
+
+function testQueueSurvivesReloadAtEveryPhase() {
+  let sim = new DriveThruSimulator();
+  const reload = () => { sim = new DriveThruSimulator(JSON.parse(JSON.stringify(sim.serialize()))); };
+  carAtPresent(sim); departToWindow3(sim); reload();
+  sim.tick(2); reload(); assert.equal(sim.carAt('window3'), null);
+  sim.tick();
+  const second = carAtPresent(sim, 2); departToWindow3(sim);
+  const third = carAtPresent(sim); sim.sendToWindow3(); reload();
+  assert.equal(sim.carAt('present').destination, 'window3');
+  sim.tick(3); reload();
+  assert.equal(sim.carAt('present').id, third.id);
+  sim.releaseStation('window3'); sim.tick(); reload();
+  assert.equal(sim.carAt('window3'), null);
+  sim.tick(); reload();
+  assert.equal(sim.carAt('window3').id, second.id);
+  sim.tick(); reload();
+  assert.equal(sim.carAt('window3_transfer').id, third.id);
+  sim.tick(3); sim.releaseStation('window3'); sim.tick(); reload();
+  sim.tick();
+  assert.equal(sim.carAt('window3').id, third.id);
+  assert.equal(sim.stationElapsed(sim.carAt('window3')), 0);
+  assert.equal(sim.completedCars.length, 3);
+  sim.reset();
+  assert.equal(sim.window3AvailableAt, 0);
+  assert.equal(sim.activeCars.length, 0);
+  assert.equal(sim.completedCars.length, 0);
+}
+
+function testPresentAverageColourAndTargetPercent() {
+  for (const [seconds, expected] of [[0,'avg-good'],[29,'avg-good'],[29.9,'avg-good'],[30,'avg-mid'],[37,'avg-mid'],[45,'avg-mid'],[45.01,'avg-bad'],[60,'avg-bad']]) {
+    assert.equal(resultAverageClass('present', seconds), expected, `Present average ${seconds}s`);
+  }
+  const cars = [29,30,37,46].map(seconds => ({lane:1,timings:{present:seconds}}));
+  assert.equal(computeScoreboard(cars).present.pct, 50, 'Only results at or below 30s meet target');
+  assert.equal(resultAverageClass('cash',37), 'avg-mid');
+  assert.equal(resultAverageClass('total',90), 'avg-mid');
+  assert.equal(resultAverageClass('total',120), 'avg-bad');
 }
 
 function testWaitingReloadAndNextCarStartsAtZero() {
@@ -152,7 +265,7 @@ function testWaitingReloadAndNextCarStartsAtZero() {
   carAtPresent(sim); sim.sendToWindow3();
   // Pending transfers survive reload as well as cars already waiting.
   let restored = new DriveThruSimulator(JSON.parse(JSON.stringify(sim.serialize())));
-  restored.tick(); restored.tick(105);
+  restored.tick(4); restored.tick(105);
   restored = new DriveThruSimulator(JSON.parse(JSON.stringify(restored.serialize())));
   assert.equal(restored.stationElapsed(restored.carAt('window3')), 105);
   assert.equal(waitingStatus(restored.stationElapsed(restored.carAt('window3'))), 'yellow');
@@ -160,7 +273,7 @@ function testWaitingReloadAndNextCarStartsAtZero() {
   restored.releaseStation('window3'); restored.tick();
   assert.deepEqual(computeScoreboard(restored.completedCars), scores);
   const next = carAtPresent(restored, 2);
-  restored.sendToWindow3(); restored.tick();
+  restored.sendToWindow3(); restored.tick(4);
   assert.equal(restored.carAt('window3').id, next.id);
   assert.equal(restored.stationElapsed(next), 0);
   assert.equal(waitingStatus(restored.stationElapsed(next)), 'green');
@@ -190,8 +303,11 @@ function runAll() {
     testMergePriorityByFirstFinishedOrder, testSequentialAdvanceAfterCompletion,
     testCompletedCarsAffectAveragesOnly, testThresholdEvents, testReset,
     testWindow3RecordsOnceAndExcludesWaiting, testOccupiedWindow3AndOtherCarsCanExit,
-    testWaitingReloadAndNextCarStartsAtZero, testEmptyWindow3Controls, testBrowserEngineMatchesSimulation];
+    testWaitingReloadAndNextCarStartsAtZero, testEmptyWindow3Controls, testBrowserEngineMatchesSimulation,
+    testWindow3QueueAndOneSecondHandover, testEarlyClearStillHonoursThreeSecondTransfer,
+    testQueueSurvivesReloadAtEveryPhase, testPresentAverageColourAndTargetPercent];
   for (const test of tests) test();
   console.log(`All ${tests.length} simulation tests passed.`);
 }
 runAll();
+

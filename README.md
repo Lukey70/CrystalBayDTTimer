@@ -8,14 +8,18 @@ The map follows the Crystal Bay reference: two entry lanes on the right, a diago
 
 ## Window 3 waiting
 
-- **Send to Window 3** moves the car at Present to the waiting window on the next movement tick.
-- Its Order, Cash, Present and Total results are recorded once, when it leaves Present.
-- The car remains visible at Window 3 with a separate clock starting at **0:00** on arrival.
-- Both the waiting car and its clock are green below **1:30**, yellow from **1:30** to **1:59**, and red from **2:00** onwards. These changes are visual only.
-- **Window 3 Complete** removes the waiting car without recording another result.
-- Waiting time never contributes to service averages, target percentages, completed-car results, or the live longest service time. The car at Window 3 is excluded from Cars in Lane.
-- Window 3 holds one car. If occupied, sending another car there is disabled; other cars can still leave Present normally.
-- Waiting cars, clocks, pending transfers and recorded results survive a page reload. Reset Day clears the whole day, including Window 3.
+- **Send to Window 3** queues the car at Present for transfer. It leaves on the next movement tick when the off-screen transfer space is free.
+- Order, Cash, Present and Total results are recorded once, when the car actually leaves Present.
+- The car disappears from Present and remains off-screen for **3 seconds** before it can appear at Window 3.
+- Window 3 holds one visible car plus one car waiting off-screen. A second car can leave Present while Window 3 is occupied, then waits off-screen.
+- When the current Window 3 car leaves, the off-screen car appears **1 second later**, provided its 3-second transfer has finished.
+- A third car's request queues at Present until the second car reaches Window 3. It then leaves automatically on the next movement tick. Its Present and Total clocks continue while it is physically held at Present.
+- The separate Window 3 timer starts at **0:00 on arrival**, with green below **1:30**, yellow from **1:30** to **1:59**, and red from **2:00** onwards. These changes are visual only.
+- **Window 3 Complete** removes the visible car without recording another result.
+- Transfer time and off-screen/Window 3 waiting time never contribute to service results, averages, target percentages, or live longest service time. Those cars are excluded from Cars in Lane.
+- Cars leaving Present normally can bypass both waiting spaces.
+- The control panel shows off-screen transfer status and requests queued at Present. Duplicate requests do not create extra transfers.
+- Reloads preserve cars, queue requests, transfer delays and results. Reset Day clears the whole day.
 
 ## Controls
 
@@ -38,8 +42,10 @@ Fullscreen Mode uses an expanded in-page display when the browser does not grant
 | Result | Target |
 | --- | --- |
 | Order 1 / Order 2 / Cash | 0:30 |
-| Present | 1:00 |
+| Present | 0:30 |
 | Total | 1:30 |
+
+Present average colours are green below 0:30, yellow from 0:30 through 0:45, and red above 0:45. Results at or below 0:30 meet its target.
 
 Normal car colours and total-time sounds use yellow at 1:30 and red at 2:00. Audio starts after the first interaction, subject to browser audio permissions. Use Enable Sounds or Test All Sounds if needed.
 
@@ -51,10 +57,7 @@ Open `index.html`, or serve this directory with a static HTTP server. For GitHub
 node --check app.js
 node --check simulation.mjs
 node tests.mjs
+node ui-tests.mjs
 ```
 
-The test suite covers both entry lanes, queue movement, merge priority, blocked stations, completion statistics, normal thresholds, Window 3 colour boundaries, result isolation, occupied-window handling, normal exits while Window 3 is occupied, reloads, resets, and parity between the browser and tested simulation engine.
-
-## Preview
-
-![Crystal Bay timer with Window 3](crystal-bay-preview-20261024.jpg)
+The 20 simulation tests cover entry lanes, queue movement, merge priority, blocked stations, completion statistics, Present average colour boundaries, the 30-second Present target, Window 3 colour boundaries, exact transfer/handover delays, FIFO queueing, result isolation, normal exits, reloads at each queue phase, reset, and browser-engine parity. `ui-tests.mjs` also exercises the actual browser script, DOM rendering and button bindings without external dependencies.

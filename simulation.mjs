@@ -2,7 +2,7 @@ export const TARGETS = {
   order1: 30,
   order2: 30,
   cash: 30,
-  present: 60,
+  present: 30,
   total: 90,
 };
 
@@ -20,6 +20,20 @@ export function waitingStatus(seconds) {
   return 'green';
 }
 
+export function resultAverageClass(key, seconds) {
+  if (['order1', 'order2', 'cash', 'present'].includes(key)) {
+    if (seconds < TARGETS[key]) return 'avg-good';
+    if (seconds <= TARGETS[key] * 1.5) return 'avg-mid';
+    return 'avg-bad';
+  }
+  if (key === 'total') {
+    if (seconds < STATUS_THRESHOLDS.yellow) return 'avg-good';
+    if (seconds < STATUS_THRESHOLDS.red) return 'avg-mid';
+    return 'avg-bad';
+  }
+  return 'avg-good';
+}
+
 export const POSITION_META = {
   lane1_pre1: { next: 'order1' },
   order1: { next: 'lane1_post', station: 'order1' },
@@ -34,6 +48,7 @@ export const POSITION_META = {
   cash: { next: 'gap_present1', station: 'cash' },
   gap_present1: { next: 'present' },
   present: { next: 'exit', station: 'present' },
+  window3_transfer: { next: 'window3' },
   window3: { next: 'exit', station: 'window3' },
 };
 
@@ -45,6 +60,7 @@ export class DriveThruSimulator {
     this.nextCarId = 1;
     this.activeCars = [];
     this.completedCars = [];
+    this.window3AvailableAt = 0;
     this.statusMessage = 'Ready.';
     if (savedState) this.load(savedState);
   }
@@ -54,11 +70,12 @@ export class DriveThruSimulator {
     this.nextCarId = 1;
     this.activeCars = [];
     this.completedCars = [];
+    this.window3AvailableAt = 0;
     this.statusMessage = 'Ready.';
   }
 
   serialize() {
-    return { now: this.now, nextCarId: this.nextCarId, activeCars: this.activeCars, completedCars: this.completedCars, statusMessage: this.statusMessage };
+    return { now: this.now, nextCarId: this.nextCarId, activeCars: this.activeCars, completedCars: this.completedCars, window3AvailableAt: this.window3AvailableAt, statusMessage: this.statusMessage };
   }
 
   load(state) {
@@ -66,6 +83,7 @@ export class DriveThruSimulator {
     this.nextCarId = Number(state.nextCarId) || 1;
     this.activeCars = Array.isArray(state.activeCars) ? state.activeCars : [];
     this.completedCars = Array.isArray(state.completedCars) ? state.completedCars : [];
+    this.window3AvailableAt = Number(state.window3AvailableAt) || 0;
     this.statusMessage = state.statusMessage || 'Ready.';
   }
 
@@ -105,18 +123,19 @@ export class DriveThruSimulator {
   sendToWindow3() {
     const car = this.carAt('present');
     if (!car) return { ok: false, reason: 'No car at Present.' };
-    if (this.carAt('window3')) return { ok: false, reason: 'Window 3 is occupied. Complete that car first.' };
     if (car.releaseRequested) return { ok: false, reason: `Car #${car.id} is already leaving Present.` };
     car.destination = 'window3';
     car.releaseRequested = true;
-    this.statusMessage = `Car #${car.id} will move from Present to Window 3.`;
+    this.statusMessage = this.carAt('window3_transfer')
+      ? `Car #${car.id} is queued at Present until the Window 3 transfer space clears.`
+      : `Car #${car.id} will leave Present and transfer to Window 3 in 3 seconds.`;
     return { ok: true, car };
   }
 
   stationElapsed(car) { return this.now - car.positionEnteredAt; }
   totalElapsed(car) { return car.completedAt != null ? car.timings.total : car.totalStartedAt == null ? 0 : this.now - car.totalStartedAt; }
-  getCarsInLaneCount() { return this.activeCars.filter((car) => car.position !== 'window3').length; }
-  getLongestCurrentTotal() { let longest = 0; for (const car of this.activeCars) if (car.position !== 'window3') longest = Math.max(longest, this.totalElapsed(car)); return longest; }
+  getCarsInLaneCount() { return this.activeCars.filter((car) => !['window3', 'window3_transfer'].includes(car.position)).length; }
+  getLongestCurrentTotal() { let longest = 0; for (const car of this.activeCars) if (!['window3', 'window3_transfer'].includes(car.position)) longest = Math.max(longest, this.totalElapsed(car)); return longest; }
 
   tick(seconds = 1) {
     const allEvents = [];
@@ -132,7 +151,7 @@ export class DriveThruSimulator {
 
   processThresholds(events) {
     for (const car of this.activeCars) {
-      if (car.position === 'window3') continue;
+      if (['window3', 'window3_transfer'].includes(car.position)) continue;
       const total = this.totalElapsed(car);
       if (car.totalStartedAt != null && !car.thresholds.yellow && total >= STATUS_THRESHOLDS.yellow) {
         car.thresholds.yellow = true;
@@ -170,10 +189,17 @@ export class DriveThruSimulator {
     const waitingCar = this.carAt('window3');
     if (waitingCar && this.canMoveFrom('window3')) planMove(waitingCar, 'exit');
 
+    const transferCar = this.carAt('window3_transfer');
+    if (transferCar && isEmptyAtStart('window3') &&
+        this.now >= (transferCar.window3ReadyAt ?? transferCar.positionEnteredAt + 3) &&
+        this.now >= this.window3AvailableAt) {
+      planMove(transferCar, 'window3');
+    }
+
     const presentCar = this.carAt('present');
     if (presentCar && this.canMoveFrom('present')) {
-      const destination = presentCar.destination === 'window3' ? 'window3' : 'exit';
-      if (destination === 'exit' || isEmptyAtStart('window3')) planMove(presentCar, destination);
+      const destination = presentCar.destination === 'window3' ? 'window3_transfer' : 'exit';
+      if (destination === 'exit' || isEmptyAtStart('window3_transfer')) planMove(presentCar, destination);
     }
 
     const gapPresentCar = this.carAt('gap_present1');
@@ -227,6 +253,7 @@ export class DriveThruSimulator {
       // A car at Window 3 has already been counted at Present. Removing it
       // must never add another result or change its recorded service times.
       if (previous === 'window3') {
+        this.window3AvailableAt = this.now + 1;
         this.activeCars = this.activeCars.filter((active) => active.id !== car.id);
         events.push({ type: 'waiting-completed', carId: car.id });
         this.statusMessage = `Car #${car.id} left Window 3.`;
@@ -244,7 +271,7 @@ export class DriveThruSimulator {
         car.timings.total = car.totalStartedAt != null ? this.now - car.totalStartedAt : 0;
         car.completedAt = this.now;
         this.completedCars.unshift({ ...car, timings: { ...car.timings }, thresholds: { ...car.thresholds } });
-        events.push({ type: 'car-completed', carId: car.id, lane: car.lane, waiting: target === 'window3' });
+        events.push({ type: 'car-completed', carId: car.id, lane: car.lane, waiting: target === 'window3_transfer' });
       }
 
       if (target === 'exit') {
@@ -253,10 +280,15 @@ export class DriveThruSimulator {
       } else {
         car.position = target;
         car.positionEnteredAt = this.now;
+        if (target === 'window3_transfer') car.window3ReadyAt = this.now + 3;
         if (previous === 'order1' || previous === 'order2') car.orderReleaseAt = this.now;
         if (target === 'cash') car.orderReleaseAt = null;
         events.push({ type: 'car-moved', carId: car.id, from: previous, to: target });
-        if (target === 'window3') this.statusMessage = `Car #${car.id} is waiting at Window 3. Results recorded; waiting time is separate.`;
+        if (target === 'window3_transfer') this.statusMessage = `Car #${car.id} left Present. Results recorded; transferring to Window 3.`;
+        if (target === 'window3') {
+          events.push({ type: 'waiting-arrived', carId: car.id });
+          this.statusMessage = `Car #${car.id} arrived at Window 3. Waiting timer started at 0:00.`;
+        }
       }
     }
   }
@@ -281,4 +313,5 @@ export function computeScoreboard(completedCars) {
     total: { avg: avg(totalValues), pct: underPct(totalValues, TARGETS.total) },
   };
 }
+
 

@@ -1,27 +1,21 @@
-Crystal Bay layout and Window 3 update — 24 October 2026
+Crystal Bay Present target and Window 3 queue — 24 October 2026
 
 PASS: node --check app.js
 PASS: node --check simulation.mjs
-PASS: node tests.mjs — all 16 simulation tests
+PASS: node tests.mjs — all 20 simulation tests
+PASS: node ui-tests.mjs — browser-script UI integration checks
 
-Verified: original queue movement and merge priority; Window 3 starts at zero;
-green/yellow/red boundaries at 90 and 120 seconds; exactly one recorded result
-on departure from Present; no waiting time in averages, targets, completed-car
-results or longest current service time; occupied Window 3 rejects transfers;
-other cars can exit normally; saved-state reloads; reset; browser engine parity.
-
-Map geometry inspected with all car spaces occupied: centred cars, separate
-station labels, full entry spaces, and smooth connected lanes.
-
-LIVE SITE: GitHub Pages deployment succeeded. Browser UI confirmed both lane
-controls, release through Cash and Present, transfer to Window 3, frozen
-results while waiting, normal exits with Window 3 occupied, disabled transfer
-to occupied Window 3, saved state after reload, and yellow waiting status.
-LIVE SITE: Red waiting status confirmed after 2:00. Window 3 departure left
-completed count and service average unchanged; next car can use Window 3.
-
-LIVE SITE: Expanded display fallback verified. Final label clearance adjusted
-so Order 2 sits between the two ordering lanes, clear of the Order 1 car.
-
-FINAL LIVE DISPLAY: Order 2 label bounds clear both ordering cars. Expanded
-view and Exit Fullscreen work. Final screenshot saved in this repository.
+Verified:
+- Present target 30s; averages green below 30s, yellow 30–45s, red above 45s.
+- A 37s average renders yellow; target percentages use 30s.
+- First car stays off-screen for exactly 3s after leaving Present.
+- Second car can leave Present while Window 3 is occupied.
+- One-second handover after Window 3 clears, respecting minimum travel time.
+- A third request queues at Present and advances automatically in FIFO order.
+- Held Present time counts until actual departure; transfer/wait time excluded.
+- Exactly one recorded result per departure from Present, no double counting.
+- Off-screen/visible waiting cars excluded from lane count and longest service.
+- Reloads preserve pending transfers, blocked requests and handover delays.
+- Window 3 clock starts at zero on arrival; green/yellow/red boundaries retained.
+- Normal exits can bypass both waiting spaces; reset clears the entire queue.
+- Browser script executes the same engine as the tested simulation module.
