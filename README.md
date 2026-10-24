@@ -31,6 +31,8 @@ The map follows the Crystal Bay reference: two entry lanes on the right, a diago
 
 Order and Cash releases wait until the next space is free; their clocks continue until the car actually moves. Total time starts on departure from the ordering speaker and stops on departure from Present.
 
+Fullscreen Mode uses an expanded in-page display when the browser does not grant native fullscreen. Exit Fullscreen returns to the controls.
+
 ## Targets
 
 | Result | Target |

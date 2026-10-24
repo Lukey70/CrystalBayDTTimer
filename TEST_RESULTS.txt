@@ -12,3 +12,10 @@ other cars can exit normally; saved-state reloads; reset; browser engine parity.
 
 Map geometry inspected with all car spaces occupied: centred cars, separate
 station labels, full entry spaces, and smooth connected lanes.
+
+LIVE SITE: GitHub Pages deployment succeeded. Browser UI confirmed both lane
+controls, release through Cash and Present, transfer to Window 3, frozen
+results while waiting, normal exits with Window 3 occupied, disabled transfer
+to occupied Window 3, saved state after reload, and yellow waiting status.
+LIVE SITE: Red waiting status confirmed after 2:00. Window 3 departure left
+completed count and service average unchanged; next car can use Window 3.

@@ -720,6 +720,10 @@ function setFullscreenState(isFullscreen) {
 }
 
 async function toggleFullscreen() {
+  if (!document.fullscreenElement && document.body.classList.contains('fullscreen-mode')) {
+    setFullscreenState(false);
+    return;
+  }
   try {
     if (document.fullscreenElement) {
       await document.exitFullscreen();
@@ -727,7 +731,9 @@ async function toggleFullscreen() {
       await document.documentElement.requestFullscreen();
     }
   } catch (error) {
-    setStatus(`Fullscreen could not be changed: ${error.message || error}`);
+    // The display can still expand inside browsers that deny native fullscreen.
+    setFullscreenState(true);
+    setStatus('Expanded timer view enabled.');
   }
 }
 
